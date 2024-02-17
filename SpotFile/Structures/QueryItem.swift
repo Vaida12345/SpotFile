@@ -82,16 +82,48 @@ final class QueryItem: Codable, Identifiable {
     }
     
     func match(query: String) -> AttributedString? {
+        var queryComponents = self.queryComponents
+        if self.mustIncludeFirstKeyword, let firstComponent = queryComponents.first {
+            guard query.hasPrefix(firstComponent.value) else { return nil }
+        }
+        
         var string = AttributedString(self.query)
         if let range = string.range(of: query, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]) {
             string[range].inlinePresentationIntent = .stronglyEmphasized
             return string
         }
         
-        let queryComponents = self.queryComponents
+        var resultingString = AttributedString()
+        var query = query
+        
+        if self.mustIncludeFirstKeyword, !queryComponents.isEmpty {
+            // consume the first query component
+            query.removeFirst(queryComponents.first!.value.count)
+            var attributed = AttributedString(self.query[self.query.startIndex ..< queryComponents.removeFirst().endIndex])
+            attributed.inlinePresentationIntent = .stronglyEmphasized
+            resultingString.append(attributed)
+        }
+        
+        var queryIterator = query.makeIterator()
+        var queryIteratorCurrent: Character? = nil
+        
+        func assignNext() -> Bool {
+            guard let next = queryIterator.next() else { return false }
+            if next.isWhitespace || next == "_" { return assignNext() }
+            queryIteratorCurrent = next
+            return true
+        }
+        
         
         for (component, startIndex, endIndex) in queryComponents.map(\.tuple) {
-            guard let range = component.firstIndex(of: query) else { continue }
+            for c in component {
+                if queryIteratorCurrent == c {
+                    
+                    guard assignNext() else {
+                        
+                    }
+                }
+            }
             
             
         }
