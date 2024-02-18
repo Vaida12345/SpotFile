@@ -42,7 +42,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                             matches.append((item, string))
                         }
                     }
-                    let _matches = matches.sorted(on: { $0.0.openedRecords[searchText, default: 0] }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                    let _matches = matches.sorted(on: {
+                        $0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0
+                    }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
                     
                     Task { @MainActor in
                         self.matches = _matches

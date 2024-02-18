@@ -18,8 +18,6 @@ struct ContentView: View {
             SuggestionTextField(modelProvider: modelProvider)
                 .autocorrectionDisabled()
             
-            Divider()
-            
             if modelProvider.searchText.isEmpty {
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" ,")) {
                     openWindow(id: "configuration")
@@ -29,6 +27,7 @@ struct ContentView: View {
                 .keyboardShortcut(.init(","), modifiers: .command)
                 
                 Divider()
+                    .padding(.horizontal)
                 
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" Q")) {
                     try? ModelProvider.instance.save()
