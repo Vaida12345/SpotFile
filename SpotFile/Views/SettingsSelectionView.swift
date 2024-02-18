@@ -16,15 +16,10 @@ struct SettingsSelectionView: View {
     
     @FocusState private var focusedState: FocusValues?
     
-    var icon: Image {
-        if let image = selection.icon.image {
-            Image(nsImage: image)
-        } else if !selection.iconSystemName.isEmpty {
-            Image(systemName: selection.iconSystemName)
-        } else {
-            Image(systemName: "folder.badge.plus")
-        }
-    }
+    @Environment(ModelProvider.self) private var modelProvider: ModelProvider
+    
+    @Environment(\.undoManager) private var undoManager
+    
     
     var body: some View {
         DropHandlerView()
@@ -32,7 +27,7 @@ struct SettingsSelectionView: View {
                 ScrollView {
                     VStack {
                         HStack {
-                            icon
+                            selection.iconView
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 50, height: 50)
@@ -106,8 +101,11 @@ struct SettingsSelectionView: View {
                                         Toggle("Must include first keyword", isOn: $selection.mustIncludeFirstKeyword)
                                         Spacer()
                                     }
-                                    Text("When conducting searches, the leading keyword *\(selection.queryComponents.first?.value ?? "")* must be included to find this item.")
-                                        .foregroundStyle(.secondary)
+                                    if case let .content(content) = selection.queryComponents.first {
+                                        Text("When conducting searches, the leading keyword *\(content)* must be included to find this item.")
+                                            .foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.leading)
+                                    }
                                 }
                             }
                         }
@@ -140,6 +138,16 @@ struct SettingsSelectionView: View {
             .onAppear {
                 if selection.query == "new" {
                     self.focusedState = .title
+                }
+            }
+            .toolbar {
+                Button {
+                    modelProvider.removeAll(from: \.items, undoManager: undoManager) {
+                        $0.id == selection.id
+                    }
+                } label: {
+                    Image(systemName: "trash")
+                        .symbolRenderingMode(.multicolor)
                 }
             }
     }

@@ -14,40 +14,43 @@ struct SettingsView: View {
     
     @State private var selectedItem: UUID?
     
+    @State private var searchText = ""
+    
+    @Environment(\.undoManager) private var undoManager
+    
+    
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedItem) {
-                Section("File") {
-                    ForEach(modelProvider.items) { item in
+                ForEach(modelProvider.items.filter { !searchText.isEmpty => $0.match(query: searchText) != nil }) { item in
+                    HStack {
                         Text(item.query)
                     }
-                    
-                    Button("new...") {
-                        let newItem = QueryItem.new()
-                        defer {
-                            withAnimation {
-                                selectedItem = newItem.id
-                            }
-                        }
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                Button {
+                    let newItem = QueryItem.new()
+                    defer {
                         withAnimation {
-                            modelProvider.items.append(newItem)
+                            selectedItem = newItem.id
                         }
                     }
-                    .contentShape(Rectangle())
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Color.accentColor)
+                    modelProvider.append(newItem, to: \.items, undoManager: undoManager)
+                } label: {
+                    Label("New", systemImage: "plus")
                 }
-                
-                Section("Folder") {
-                    
-                }
+                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+                .padding()
             }
         } detail: {
             if let selection = modelProvider.items.first(where: { $0.id == selectedItem }) {
                 SettingsSelectionView(selection: selection)
             }
         }
-
+        .searchable(text: $searchText, placement: .sidebar)
     }
 }
 

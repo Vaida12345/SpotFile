@@ -7,12 +7,77 @@
 
 import Foundation
 import Stratum
+import SwiftUI
+import UniformTypeIdentifiers
 
 
 @Observable
-final class ModelProvider: Codable, DataProvider {
+final class ModelProvider: Codable, DataProvider, ReferenceFileDocument {
+    static var readableContentTypes: [UTType] = []
     
-    var items: [QueryItem] = []
+    func snapshot(contentType: UTType) throws -> ModelProvider {
+        self
+    }
+    
+    func fileWrapper(snapshot: ModelProvider, configuration: WriteConfiguration) throws -> FileWrapper {
+        fatalError()
+    }
+    
+    init(configuration: ReadConfiguration) throws {
+        fatalError()
+    }
+    
+    typealias Snapshot = ModelProvider
+    
+    
+    var items: [QueryItem] = [] {
+        didSet {
+            selectionIndex = 0
+            matches.removeAll()
+        }
+    }
+    
+    var searchText: String = "" {
+        didSet {
+            guard !searchText.isEmpty else {
+                selectionIndex = 0
+                matches.removeAll()
+                return
+            }
+            
+            Task { @MainActor in
+                isSearching = true
+                selectionIndex = 0
+                
+                Task.detached {
+                    var matches: [(Int, QueryItem, AttributedString)] = []
+                    for item in self.items {
+                        if let string = item.match(query: self.searchText) {
+                            matches.append((matches.count, item, string))
+                        }
+                    }
+                    let _matches = consume matches
+                    
+                    Task { @MainActor in
+                        self.matches = _matches
+                        self.isSearching = false
+                    }
+                }
+            }
+        }
+    }
+    
+    var selectionIndex: Int = 0 
+    
+    var isSearching = false
+    
+    var matches: [(Int, QueryItem, AttributedString)] = []
+    
+    
+    func submitItem() {
+        guard selectionIndex < self.matches.count else { return }
+        self.matches[selectionIndex].1.open()
+    }
     
     
     /// The main ``DataProvider`` to work with.
@@ -34,6 +99,10 @@ final class ModelProvider: Codable, DataProvider {
     
     private init(items: [QueryItem] = []) {
         self.items = items
+    }
+    
+    enum CodingKeys: CodingKey {
+        case _items
     }
     
 }

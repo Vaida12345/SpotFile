@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Stratum
 
 @main
 struct SpotFileApp: App {
@@ -27,6 +28,18 @@ struct SpotFileApp: App {
             SettingsView()
                 .environment(modelProvider)
         }
+        .commands {
+            CommandGroup(replacing: .saveItem) {
+                Button("Save") {
+                    do {
+                        try ModelProvider.instance.save()
+                    } catch {
+                        AlertManager(error).present()
+                    }
+                }
+                .keyboardShortcut(.init("s"), modifiers: .command)
+            }
+        }
     }
     
     
@@ -36,7 +49,6 @@ struct SpotFileApp: App {
     final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         
         func applicationWillTerminate(_ notification: Notification) {
-            print("will persist")
             try! ModelProvider.instance.save()
         }
     }

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "5498889D-4E7D-44E0-8F40-DDE72D81EA23",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SpotFile.xcodeproj",
+        "identifier" : "B43EA8752B80DDC100568440",
+        "name" : "SpotFileTests"
+      }
+    }
+  ],
+  "version" : 1
+}

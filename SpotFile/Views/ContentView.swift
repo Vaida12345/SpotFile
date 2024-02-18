@@ -9,27 +9,18 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @State private var searchText = ""
-    
     @Environment(\.openWindow) private var openWindow 
     
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            TextField("Search", text: $searchText)
-                .textFieldStyle(.plain)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(.thinMaterial)
-                }
+            SuggestionTextField(modelProvider: modelProvider)
                 .autocorrectionDisabled()
             
             Divider()
             
-            if searchText.isEmpty {
+            if modelProvider.searchText.isEmpty {
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" R")) {
                     // refresh
                 } label: {
@@ -44,15 +35,7 @@ struct ContentView: View {
                 }
                 .keyboardShortcut(.init(","), modifiers: .command)
             } else {
-                ScrollView {
-                    VStack {
-                        let items = modelProvider.items.map { ($0, $0.match(query: searchText)) }.filter { $0.1 != nil }
-                        ForEach(items, id: \.0.id) { (item, match) in
-                            
-                            Text(match!)
-                        }
-                    }
-                }
+                SearchResultView()
             }
         }
         .padding(.all, 5)
