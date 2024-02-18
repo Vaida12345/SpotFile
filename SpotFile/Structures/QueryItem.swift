@@ -90,6 +90,9 @@ final class QueryItem: Codable, Identifiable {
     }
     
     func open(query: String) {
+        Task.detached {
+            try ModelProvider.instance.save()
+        }
         self.openedRecords[query, default: 0] += 1
         withErrorPresented {
             let path = self.item.appending(path: self.openableFileRelativePath)
