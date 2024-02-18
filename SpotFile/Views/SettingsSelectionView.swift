@@ -126,6 +126,17 @@ struct SettingsSelectionView: View {
             .onDrop { sources in
                 guard let item = sources.first else { return }
                 self.selection.item = item
+                
+                if self.selection.query == "new" {
+                    self.selection.query = item.stem
+                }
+                Task {
+                    if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
+                        self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
+                    } else if item.appending(path: "Package.swift").exists {
+                        self.selection.openableFileRelativePath = "Package.swift"
+                    }
+                }
             }
             .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.item]) { result in
                 do {

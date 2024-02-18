@@ -47,7 +47,7 @@ struct MenuBarStyleButton<Label>: View where Label: View {
                         
                         Spacer()
                     }
-                    .frame(width: 35)
+                    .frame(width: 40)
                 }
             }
             .contentShape(Rectangle())

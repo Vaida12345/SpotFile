@@ -36,9 +36,9 @@ final class QueryItem: Codable, Identifiable {
     var iconSystemName: String = ""
     
     
-    var openedCount: Int = 0
-    
     var mustIncludeFirstKeyword = false
+    
+    var openedRecords: [String: Int]
     
     
     /// the returned components are lowercased.
@@ -89,35 +89,11 @@ final class QueryItem: Codable, Identifiable {
         self.icon.image = icon
     }
     
-    func open() {
-        self.openedCount += 1
-        Task {
-            do {
-                let path = self.item.appending(path: self.openableFileRelativePath)
-                if path.isDirectory {
-                    try path.reveal()
-                } else {
-                    try await path.open()
-                }
-//                print(path)
-//                if path.extension == "xcodeproj", let xcodePath = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.dt.Xcode") {
-//                    let config = NSWorkspace.OpenConfiguration()
-//                    config.activates = true
-//                    
-//                    let app = try await NSWorkspace.shared.open([path.url], withApplicationAt: xcodePath.appending(path: "Contents/MacOS/Xcode"), configuration: config)
-//                    print(app)
-//                    print(app.isActive)
-//                    print(app.isFinishedLaunching)
-//                    print(app.isHidden)
-//                    print(app.isTerminated)
-//                    print(app.launchDate)
-//                    print(app.processIdentifier)
-//                } else {
-//                    print(try await path.open())
-//                }
-            } catch {
-                await AlertManager(error).present()
-            }
+    func open(query: String) {
+        self.openedRecords[query, default: 0] += 1
+        withErrorPresented {
+            let path = self.item.appending(path: self.openableFileRelativePath)
+            try await path.open()
         }
     }
     
@@ -145,18 +121,18 @@ final class QueryItem: Codable, Identifiable {
             resultingString.append(attributed)
         }
         
-        return __recursiveMatch(query: query[query.startIndex...], components: queryComponents[0...])
+        return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...])
     }
     
-    private func __recursiveMatch(query: Substring, components: ArraySlice<QueryComponent>) -> AttributedString? {
-        guard !query.isEmpty else {
+    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>) -> AttributedString? {
+        guard !_query.isEmpty else {
             return AttributedString(components.map(\.value).joined(separator: "")) // end, returning trailing components
         }
         guard let component = components.first else {
             // reached end of components
             return nil
         }
-        var query = query
+        var query = _query
         
         switch component {
         case .spacer(let spacer):
@@ -165,7 +141,7 @@ final class QueryItem: Codable, Identifiable {
                 query.removeFirst()
                 attributed.inlinePresentationIntent = .stronglyEmphasized
             }
-            return __recursiveMatch(query: query, components: components.dropFirst()).map { attributed + $0 }
+            return __recursiveMatch(_query: query, components: components.dropFirst()).map { attributed + $0 }
             
         case .content(let content):
             if query.first == "_" || (!query.isEmpty && query.first!.isWhitespace) {
@@ -174,12 +150,12 @@ final class QueryItem: Codable, Identifiable {
                 
                 // if keep it, then this content cannot be matched, skipped.
                 if components.count != 1,
-                   let next = __recursiveMatch(query: query, components: components.dropFirst()) {
+                   let next = __recursiveMatch(_query: query, components: components.dropFirst()) {
                     return AttributedString(content)  + next
                 }
                 
                 // still here? then cannot keep it
-                if let next = __recursiveMatch(query: query.dropFirst(), components: components) {
+                if let next = __recursiveMatch(_query: query.dropFirst(), components: components) {
                     return next
                 }
                 
@@ -198,7 +174,7 @@ final class QueryItem: Codable, Identifiable {
                 } else {
                     if attributed.runs.isEmpty {
                         // does not match at all
-                        return __recursiveMatch(query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
+                        return __recursiveMatch(_query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
                     }
                     var cx = String(c)
                     while let next = contentIterator.next() { cx.append(next) }
@@ -207,7 +183,7 @@ final class QueryItem: Codable, Identifiable {
                 }
             }
             
-            return __recursiveMatch(query: query, components: components.dropFirst()).map { attributed + $0 }
+            return __recursiveMatch(_query: query, components: components.dropFirst()).map({ attributed + $0 }) ?? __recursiveMatch(_query: _query, components: components.dropFirst()).map({ AttributedString(content) + $0 })
         }
     }
     
@@ -260,6 +236,7 @@ final class QueryItem: Codable, Identifiable {
         self.item = item
         self.openableFileRelativePath = openableFileRelativePath
         self.icon = Icon(image: nil)
+        self.openedRecords = [:]
         
         updateQueryComponents()
     }
@@ -283,6 +260,7 @@ final class QueryItem: Codable, Identifiable {
         case _openedCount
         case _mustIncludeFirstKeyword
         case _queryComponents
+        case _openedRecords
     }
     
     func encode(to encoder: Encoder) throws {
@@ -293,7 +271,7 @@ final class QueryItem: Codable, Identifiable {
         try container.encode(self._openableFileRelativePath, forKey: ._openableFileRelativePath)
         try container.encode(self._icon, forKey: ._icon)
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
-        try container.encode(self._openedCount, forKey: ._openedCount)
+        try container.encode(self._openedRecords, forKey: ._openedRecords)
         try container.encode(self._mustIncludeFirstKeyword, forKey: ._mustIncludeFirstKeyword)
         try container.encode(self._queryComponents, forKey: ._queryComponents)
     }
@@ -306,7 +284,7 @@ final class QueryItem: Codable, Identifiable {
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)
         self._icon = try container.decode(QueryItem.Icon.self, forKey: ._icon)
         self._iconSystemName = try container.decode(String.self, forKey: ._iconSystemName)
-        self._openedCount = try container.decode(Int.self, forKey: ._openedCount)
+        self._openedRecords = try container.decodeIfPresent([String:Int].self, forKey: ._openedRecords) ?? [:]
         self._mustIncludeFirstKeyword = try container.decode(Bool.self, forKey: ._mustIncludeFirstKeyword)
         self._queryComponents = try container.decode([QueryItem.QueryComponent].self, forKey: ._queryComponents)
     }

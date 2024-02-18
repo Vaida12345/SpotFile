@@ -12,23 +12,7 @@ import UniformTypeIdentifiers
 
 
 @Observable
-final class ModelProvider: Codable, DataProvider, ReferenceFileDocument {
-    static var readableContentTypes: [UTType] = []
-    
-    func snapshot(contentType: UTType) throws -> ModelProvider {
-        self
-    }
-    
-    func fileWrapper(snapshot: ModelProvider, configuration: WriteConfiguration) throws -> FileWrapper {
-        fatalError()
-    }
-    
-    init(configuration: ReadConfiguration) throws {
-        fatalError()
-    }
-    
-    typealias Snapshot = ModelProvider
-    
+final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     var items: [QueryItem] = [] {
         didSet {
@@ -39,24 +23,26 @@ final class ModelProvider: Codable, DataProvider, ReferenceFileDocument {
     
     var searchText: String = "" {
         didSet {
+            self.hasBeenRecorded = false
             guard !searchText.isEmpty else {
                 selectionIndex = 0
                 matches.removeAll()
                 return
             }
             
+            let searchText = searchText
             Task { @MainActor in
                 isSearching = true
                 selectionIndex = 0
                 
                 Task.detached {
-                    var matches: [(Int, QueryItem, AttributedString)] = []
+                    var matches: [(QueryItem, AttributedString)] = []
                     for item in self.items {
                         if let string = item.match(query: self.searchText) {
-                            matches.append((matches.count, item, string))
+                            matches.append((item, string))
                         }
                     }
-                    let _matches = consume matches
+                    let _matches = matches.sorted(on: { $0.0.openedRecords[searchText, default: 0] }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
                     
                     Task { @MainActor in
                         self.matches = _matches
@@ -74,9 +60,12 @@ final class ModelProvider: Codable, DataProvider, ReferenceFileDocument {
     var matches: [(Int, QueryItem, AttributedString)] = []
     
     
+    var hasBeenRecorded: Bool = false
+    
+    
     func submitItem() {
         guard selectionIndex < self.matches.count else { return }
-        self.matches[selectionIndex].1.open()
+        self.matches[selectionIndex].1.open(query: self.searchText)
     }
     
     

@@ -21,19 +21,22 @@ struct ContentView: View {
             Divider()
             
             if modelProvider.searchText.isEmpty {
-                MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" R")) {
-                    // refresh
-                } label: {
-                    Label("Refresh", systemImage: "arrow.triangle.2.circlepath")
-                }
-                .keyboardShortcut(.init("r"), modifiers: .command)
-                
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" ,")) {
                     openWindow(id: "configuration")
                 } label: {
-                    Label("Settings...", systemImage: "gearshape")
+                    Text("Settings...")
                 }
                 .keyboardShortcut(.init(","), modifiers: .command)
+                
+                Divider()
+                
+                MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" Q")) {
+                    try? ModelProvider.instance.save()
+                    exit(0)
+                } label: {
+                    Text("Quit SpotFile")
+                }
+                .keyboardShortcut(.init("q"), modifiers: .command)
             } else {
                 SearchResultView()
             }

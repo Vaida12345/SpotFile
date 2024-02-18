@@ -59,12 +59,12 @@ struct SearchResultItem: View {
             if modelProvider.selectionIndex != index {
                 modelProvider.selectionIndex = index
             } else {
-                item.open()
+                item.open(query: modelProvider.searchText)
             }
         }
         .contextMenu {
             Button("Open") {
-                item.open()
+                item.open(query: modelProvider.searchText)
             }
             Button("Show in Enclosing Folder") {
                 withErrorPresented {

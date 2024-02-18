@@ -48,6 +48,12 @@ struct SettingsView: View {
         } detail: {
             if let selection = modelProvider.items.first(where: { $0.id == selectedItem }) {
                 SettingsSelectionView(selection: selection)
+            } else {
+                Text("Select an item on the left\nOr add a new item.")
+                    .bold()
+                    .foregroundStyle(.secondary)
+                    .fontDesign(.rounded)
+                    .multilineTextAlignment(.center)
             }
         }
         .searchable(text: $searchText, placement: .sidebar)

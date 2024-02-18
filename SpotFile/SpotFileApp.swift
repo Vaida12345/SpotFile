@@ -13,14 +13,17 @@ struct SpotFileApp: App {
     
     @State private var modelProvider = ModelProvider.instance
     
+    @Environment(\.dismissWindow) private var dismissWindow
+    
     var body: some Scene {
         MenuBarExtra {
             ContentView()
                 .background(.ultraThinMaterial)
                 .environment(modelProvider)
         } label: {
-            Image(systemName: "text.magnifyingglass")
+            Image("SpotFile")
                 .imageScale(.large)
+                .symbolRenderingMode(.hierarchical)
         }
         .menuBarExtraStyle(.window)
         
@@ -39,6 +42,13 @@ struct SpotFileApp: App {
                 }
                 .keyboardShortcut(.init("s"), modifiers: .command)
             }
+            
+            CommandGroup(after: .saveItem) {
+                Button("Close Window") {
+                    dismissWindow(id: "configuration")
+                }
+                .keyboardShortcut(.init("w"), modifiers: .command)
+            }
         }
     }
     
@@ -49,7 +59,7 @@ struct SpotFileApp: App {
     final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         
         func applicationWillTerminate(_ notification: Notification) {
-            try! ModelProvider.instance.save()
+            try? ModelProvider.instance.save()
         }
     }
 #endif
