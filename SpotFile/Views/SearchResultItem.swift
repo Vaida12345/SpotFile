@@ -33,7 +33,7 @@ struct SearchResultItem: View {
             
             Spacer()
             
-            if hovering {
+            if index == modelProvider.selectionIndex {
                 Button {
                     withErrorPresented {
                         try item.item.reveal()
@@ -43,6 +43,8 @@ struct SearchResultItem: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.trailing, 5)
+                .opacity(hovering ? 0.8 : 0)
+                .keyboardShortcut(.return, modifiers: .command)
             }
         }
         .foregroundStyle(index == modelProvider.selectionIndex ? .white : .primary)
@@ -67,14 +69,22 @@ struct SearchResultItem: View {
                 item.open(query: modelProvider.searchText)
             }
             Button("Show in Enclosing Folder") {
-                withErrorPresented {
-                    try item.item.reveal()
-                }
+                item.reveal(query: modelProvider.searchText)
             }
             
             Divider()
             
+            Button("Copy") {
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.writeObjects([item.item.url as NSPasteboardWriting])
+            }
             
+            Button("Copy as pathname") {
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.setString(item.item.path, forType: .string)
+            }
         }
     }
 }

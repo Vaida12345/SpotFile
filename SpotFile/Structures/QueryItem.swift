@@ -89,14 +89,33 @@ final class QueryItem: Codable, Identifiable {
         self.icon.image = icon
     }
     
-    func open(query: String) {
-        Task.detached {
-            try ModelProvider.instance.save()
+    func reveal(query: String) {
+        self.openedRecords[query, default: 0] += 1
+        withErrorPresented {
+            let path = self.item
+            try path.reveal()
+            
+            Task.detached {
+                try ModelProvider.instance.save()
+                Task { @MainActor in
+                    ModelProvider.instance.searchText = ""
+                }
+            }
         }
+    }
+    
+    func open(query: String) {
         self.openedRecords[query, default: 0] += 1
         withErrorPresented {
             let path = self.item.appending(path: self.openableFileRelativePath)
             try await path.open()
+            
+            Task.detached {
+                try ModelProvider.instance.save()
+                Task { @MainActor in
+                    ModelProvider.instance.searchText = ""
+                }
+            }
         }
     }
     

@@ -70,6 +70,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         self.matches[selectionIndex].1.open(query: self.searchText)
     }
     
+    func revealItem() {
+        guard selectionIndex < self.matches.count else { return }
+        self.matches[selectionIndex].1.reveal(query: self.searchText)
+    }
+    
     
     /// The main ``DataProvider`` to work with.
     ///

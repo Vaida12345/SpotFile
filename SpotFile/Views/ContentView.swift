@@ -27,7 +27,7 @@ struct ContentView: View {
                 .keyboardShortcut(.init(","), modifiers: .command)
                 
                 Divider()
-                    .padding(.horizontal)
+                    .padding(.horizontal, 7)
                 
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" Q")) {
                     try? ModelProvider.instance.save()
