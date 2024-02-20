@@ -125,23 +125,17 @@ struct SettingsSelectionView: View {
             }
             .onDrop { sources in
                 guard let item = sources.first else { return }
-                self.selection.item = item
-                
-                if self.selection.query == "new" {
-                    self.selection.query = item.stem
-                }
-                Task {
-                    if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
-                        self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
-                    } else if item.appending(path: "Package.swift").exists {
-                        self.selection.openableFileRelativePath = "Package.swift"
-                    }
+                Task { @MainActor in
+                    await self.add(item: item)
                 }
             }
             .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.item]) { result in
                 do {
                     let url = try result.get()
-                    self.selection.item = FinderItem(at: url)
+                    let item = FinderItem(at: url)
+                    Task { @MainActor in
+                        await self.add(item: item)
+                    }
                 } catch {
                     AlertManager(error).present()
                 }
@@ -153,6 +147,7 @@ struct SettingsSelectionView: View {
             }
             .toolbar {
                 Button {
+                    try? selection.delete()
                     modelProvider.removeAll(from: \.items, undoManager: undoManager) {
                         $0.id == selection.id
                     }
@@ -160,6 +155,7 @@ struct SettingsSelectionView: View {
                     Image(systemName: "trash")
                         .symbolRenderingMode(.multicolor)
                 }
+                .keyboardShortcut(.delete, modifiers: [])
             }
     }
     
@@ -167,6 +163,32 @@ struct SettingsSelectionView: View {
         case title
         case relativePath
         case overrideIcon
+    }
+    
+    func add(item: FinderItem) async {
+        self.selection.item = item
+        try? await self.selection.updateIcon()
+        
+        if self.selection.query == "new" {
+            self.selection.query = item.stem
+        }
+        
+        let shouldReplaceIcon = !((try? await item.children(range: .contentsOfDirectory.withSystemHidden).contains(where: { $0.name == "Icon\r" })) ?? false)
+        
+        if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
+            self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
+            self.selection.query = project.stem
+            
+            if shouldReplaceIcon {
+                self.selection.iconSystemName = "xcodeproj"
+            }
+        } else if item.appending(path: "Package.swift").exists {
+            self.selection.openableFileRelativePath = "Package.swift"
+            
+            if shouldReplaceIcon {
+                self.selection.iconSystemName = "shippingbox"
+            }
+        }
     }
 }
 

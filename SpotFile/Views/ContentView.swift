@@ -13,6 +13,9 @@ struct ContentView: View {
     
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
     
+    @EnvironmentObject private var appDelegate: SpotFileApp.ApplicationDelegate
+    
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             SuggestionTextField(modelProvider: modelProvider)
@@ -20,7 +23,14 @@ struct ContentView: View {
             
             if modelProvider.searchText.isEmpty {
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" ,")) {
+                    NSApp.setActivationPolicy(.regular)
                     openWindow(id: "configuration")
+                    if let settingsWindow = NSApp.windows.first(where: { $0.title == "Settings" }) {
+                        settingsWindow.makeKeyAndOrderFront(nil)
+                        settingsWindow.becomeFirstResponder()
+                        settingsWindow.delegate = appDelegate
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
                 } label: {
                     Text("Settings...")
                 }

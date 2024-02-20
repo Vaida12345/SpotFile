@@ -24,6 +24,8 @@ struct SettingsView: View {
             List(selection: $selectedItem) {
                 ForEach(modelProvider.items.filter { !searchText.isEmpty => $0.match(query: searchText) != nil }) { item in
                     HStack {
+                        item.smallIconView
+                            .frame(width: 20, height: 20)
                         Text(item.query)
                     }
                 }
@@ -44,6 +46,7 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.accentColor)
                 .padding()
+                .keyboardShortcut(.init("n"))
             }
         } detail: {
             if let selection = modelProvider.items.first(where: { $0.id == selectedItem }) {
@@ -56,7 +59,7 @@ struct SettingsView: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .searchable(text: $searchText, placement: .sidebar)
+        .searchable(text: $searchText)
     }
 }
 

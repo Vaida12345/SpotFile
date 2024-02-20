@@ -47,11 +47,8 @@ extension DataProvider {
     /// Save the encoded provider to ``storageItem`` using `.plist`.
     @inlinable
     public func save() throws {
-        if FileManager.default.fileExists(atPath: Self.storageLocation.path) {
-            try FileManager.default.removeItem(at: Self.storageLocation)
-        }
-        try FileManager.default.createDirectory(at: Self.storageLocation.deletingLastPathComponent(), withIntermediateDirectories: true)
-        
+        let date = Date()
+        defer { print("Save data provider took \(date.distanceToNow())") }
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .binary
         try encoder.encode(self).write(to: Self.storageLocation)

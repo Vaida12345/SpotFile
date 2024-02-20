@@ -24,9 +24,7 @@ struct SearchResultItem: View {
     
     var body: some View {
         HStack {
-            item.iconView
-                .resizable()
-                .aspectRatio(contentMode: .fit)
+            item.smallIconView
                 .frame(width: 20, height: 20)
             
             Text(match)

@@ -20,6 +20,7 @@ struct SpotFileApp: App {
             ContentView()
                 .background(.ultraThinMaterial)
                 .environment(modelProvider)
+                .environmentObject(applicationDelegate)
         } label: {
             Image("SpotFile")
                 .imageScale(.large)
@@ -56,10 +57,23 @@ struct SpotFileApp: App {
 #if canImport (AppKit)
     @NSApplicationDelegateAdaptor(ApplicationDelegate.self) private var applicationDelegate
 
-    final class ApplicationDelegate: NSObject, NSApplicationDelegate {
+    final class ApplicationDelegate: NSObject, NSApplicationDelegate, ObservableObject, NSWindowDelegate {
+        
+        func applicationDidFinishLaunching(_ notification: Notification) {
+            try? FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").makeDirectory()
+            try? FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").makeDirectory()
+            try? FileManager.default.createDirectory(at: ModelProvider.storageLocation.deletingLastPathComponent(), withIntermediateDirectories: true)
+        }
         
         func applicationWillTerminate(_ notification: Notification) {
             try? ModelProvider.instance.save()
+        }
+        
+        func windowWillClose(_ notification: Notification) {
+            NSApp.setActivationPolicy(.accessory)
+            Task.detached {
+                try? ModelProvider.instance.save()
+            }
         }
     }
 #endif

@@ -23,11 +23,11 @@ final class QueryItem: Codable, Identifiable {
     
     var item: FinderItem {
         didSet {
-            Task {
-                try await updateIcon()
-            }
+            isItemUpdated = true
         }
     }
+    
+    var isItemUpdated = false
     
     var openableFileRelativePath: String
     
@@ -44,9 +44,30 @@ final class QueryItem: Codable, Identifiable {
     /// the returned components are lowercased.
     var queryComponents: [QueryComponent] = []
     
+    @ViewBuilder
+    var smallIconView: some View {
+        if !self.iconSystemName.isEmpty {
+            if self.iconSystemName == "xcodeproj" {
+                Image(.xcodeproj)
+            } else {
+                Image(systemName: self.iconSystemName)
+            }
+        } else if let image = self.icon.image {
+            Image(nsImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+        } else {
+            Image(systemName: "folder.badge.plus")
+        }
+    }
+    
     var iconView: Image {
         if !self.iconSystemName.isEmpty {
-            Image(systemName: self.iconSystemName)
+            if self.iconSystemName == "xcodeproj" {
+                Image(.xcodeproj)
+            } else {
+                Image(systemName: self.iconSystemName)
+            }
         } else if let image = self.icon.image {
             Image(nsImage: image)
         } else {
@@ -84,7 +105,7 @@ final class QueryItem: Codable, Identifiable {
         queryComponents = components
     }
     
-    private func updateIcon() async throws {
+    func updateIcon() async throws {
         let icon = try await self.item.preview(size: .square(64))
         self.icon.image = icon
     }
@@ -209,26 +230,62 @@ final class QueryItem: Codable, Identifiable {
         }
     }
     
-    /// An icon, remember to resize the icon to 32 x 32
-    struct Icon: Codable {
+    func delete() throws {
+        try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(self.icon.id).heic").removeIfExists()
+        try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: self.id.description).removeIfExists()
         
-        var image: NativeImage?
+        self.isItemUpdated = true
+        self.icon.isUpdated = true
+    }
+    
+    /// An icon, remember to resize the icon to 32 x 32
+    final class Icon: Codable {
+        
+        var image: NativeImage? {
+            didSet {
+                isUpdated = true
+                Task.detached {
+                    try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(self.id).heic").removeIfExists()
+                }
+            }
+        }
+        
+        var isUpdated: Bool = false
+        
+        let id: UUID
+        
         
         func encode(to encoder: Encoder) throws {
+            let date = Date()
+            defer { print("encode icon took \(date.distanceToNow())") }
+            
             var container = encoder.singleValueContainer()
-            try container.encode(image?.data(using: .heic))
+            
+            guard image != nil else { try container.encodeNil(); return }
+            try container.encode(id)
+            
+            guard isUpdated else { return }
+            
+            let iconDir = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons")
+            try image?.write(to: iconDir.appending(path: "\(id).heic"), option: .heic)
+            self.isUpdated = false
         }
         
         init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
-            guard !container.decodeNil() else { return }
-            let data = try container.decode(Data.self)
-            guard let image = NativeImage(data: data) else { throw ErrorManager("Cannot decode the image") }
+            guard !container.decodeNil() else {
+                self.id = UUID()
+                return
+            }
+            let id = try container.decode(UUID.self)
+            guard let image = NativeImage(at: FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(id).heic")) else { throw ErrorManager("Cannot decode the image") }
             self.image = image
+            self.id = id
         }
         
         init(image: NativeImage?) {
             self.image = image
+            self.id = UUID()
         }
         
         static let preview = Icon(image: NativeImage())
@@ -275,7 +332,6 @@ final class QueryItem: Codable, Identifiable {
     enum CodingKeys: CodingKey {
         case id
         case _query
-        case _item
         case _openableFileRelativePath
         case _icon
         case _iconSystemName
@@ -286,10 +342,19 @@ final class QueryItem: Codable, Identifiable {
     }
     
     func encode(to encoder: Encoder) throws {
+        let date = Date()
+        defer { print("encode query item took \(date.distanceToNow())") }
+        
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.id, forKey: .id)
         try container.encode(self._query, forKey: ._query)
-        try container.encode(self._item, forKey: ._item, configuration: [])
+        
+        let bookmarkData = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: id.description)
+        if isItemUpdated {
+            try item.url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
+            isItemUpdated = false
+        }
+        
         try container.encode(self._openableFileRelativePath, forKey: ._openableFileRelativePath)
         try container.encode(self._icon, forKey: ._icon)
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
@@ -302,7 +367,17 @@ final class QueryItem: Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
         self._query = try container.decode(String.self, forKey: ._query)
-        self._item = try container.decode(FinderItem.self, forKey: ._item, configuration: [])
+        
+        let bookmarkData = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: id.description)
+        
+        var bookmarkDataIsStale = false
+        let url = try URL(resolvingBookmarkData: Data(at: bookmarkData), options: [], relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale)
+        if bookmarkDataIsStale {
+            try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
+        }
+        
+        self._item = FinderItem(at: url)
+        
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)
         self._icon = try container.decode(QueryItem.Icon.self, forKey: ._icon)
         self._iconSystemName = try container.decode(String.self, forKey: ._iconSystemName)
