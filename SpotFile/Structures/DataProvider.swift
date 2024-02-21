@@ -9,6 +9,7 @@
 
 import Foundation
 import SwiftData
+import Stratum
 
 
 /// The provider for the main storable workflow of data.

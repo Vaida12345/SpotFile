@@ -141,10 +141,10 @@ final class QueryItem: Codable, Identifiable {
     }
     
     func match(query: String) -> AttributedString? {
-        var queryComponents = self.queryComponents
-        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
-            guard query.lowercased().hasPrefix(firstComponent.lowercased()) else { return nil }
-        }
+        let queryComponents = self.queryComponents
+//        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
+//            guard query.lowercased().hasPrefix(firstComponent.lowercased()) else { return nil }
+//        }
         
 //        var string = AttributedString(self.query)
 //        if let range = string.range(of: query, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]) {
@@ -152,22 +152,19 @@ final class QueryItem: Codable, Identifiable {
 //            return string
 //        }
         
-        var resultingString = AttributedString()
-        var query = query
+//        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
+//            // consume the first query component
+//            query.removeFirst(firstComponent.count)
+//            var attributed = AttributedString(firstComponent)
+//            attributed.inlinePresentationIntent = .stronglyEmphasized
+//            queryComponents.removeFirst()
+//            resultingString.append(attributed)
+//        }
         
-        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
-            // consume the first query component
-            query.removeFirst(firstComponent.count)
-            var attributed = AttributedString(firstComponent)
-            attributed.inlinePresentationIntent = .stronglyEmphasized
-            queryComponents.removeFirst()
-            resultingString.append(attributed)
-        }
-        
-        return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...])
+        return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
     }
     
-    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>) -> AttributedString? {
+    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {
         guard !_query.isEmpty else {
             return AttributedString(components.map(\.value).joined(separator: "")) // end, returning trailing components
         }
@@ -216,6 +213,9 @@ final class QueryItem: Codable, Identifiable {
                     attributed += _attributed
                 } else {
                     if attributed.runs.isEmpty {
+                        if self.mustIncludeFirstKeyword && isFirst {
+                            return nil
+                        }
                         // does not match at all
                         return __recursiveMatch(_query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
                     }
@@ -226,7 +226,7 @@ final class QueryItem: Codable, Identifiable {
                 }
             }
             
-            return __recursiveMatch(_query: query, components: components.dropFirst()).map({ attributed + $0 }) ?? __recursiveMatch(_query: _query, components: components.dropFirst()).map({ AttributedString(content) + $0 })
+            return __recursiveMatch(_query: query, components: components.dropFirst()).map({ attributed + $0 }) ?? (isFirst && self.mustIncludeFirstKeyword ? nil : __recursiveMatch(_query: _query, components: components.dropFirst()).map({ AttributedString(content) + $0 }))
         }
     }
     

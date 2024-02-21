@@ -37,7 +37,7 @@ struct SearchResultItem: View {
                         try item.item.reveal()
                     }
                 } label: {
-                    Image(systemName: "folder")
+                    Image(systemName: "magnifyingglass")
                 }
                 .buttonStyle(.plain)
                 .padding(.trailing, 5)
