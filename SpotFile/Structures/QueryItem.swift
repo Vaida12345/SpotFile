@@ -94,7 +94,7 @@ final class QueryItem: Codable, Identifiable {
                 components.append(.content(cumulative))
                 cumulative = ""
                 continue
-            } else if self.query[index].isWhitespace || self.query[index] == "_" {
+            } else if self.query[index].isWhitespace || QueryItem.separators.contains(self.query[index]) {
                 components.append(.content(cumulative))
                 components.append(.spacer("\(self.query[index])"))
                 cumulative = ""
@@ -152,6 +152,9 @@ final class QueryItem: Codable, Identifiable {
         }
     }
     
+    
+    static let separators: [Character] = ["_", "/"]
+    
     func match(query: String) -> AttributedString? {
         let queryComponents = self.queryComponents
 //        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
@@ -196,7 +199,7 @@ final class QueryItem: Codable, Identifiable {
             return __recursiveMatch(_query: query, components: components.dropFirst()).map { attributed + $0 }
             
         case .content(let content):
-            if query.first == "_" || (!query.isEmpty && query.first!.isWhitespace) {
+            if QueryItem.separators.contains(query.first!) || query.first!.isWhitespace { // query cannot be empty, as ensured by the guard on the first line
                 // okay. maybe we should ignore the white space, maybe we should keep it
                 // prefer keep it
                 
