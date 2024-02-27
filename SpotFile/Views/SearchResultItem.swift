@@ -24,7 +24,7 @@ struct SearchResultItem: View {
     
     var body: some View {
         HStack {
-            item.smallIconView
+            item.smallIconView(isSelected: index == modelProvider.selectionIndex)
                 .frame(width: 20, height: 20)
             
             Text(match)

@@ -45,10 +45,16 @@ final class QueryItem: Codable, Identifiable {
     var queryComponents: [QueryComponent] = []
     
     @ViewBuilder
-    var smallIconView: some View {
+    func smallIconView(isSelected: Bool) -> some View {
         if !self.iconSystemName.isEmpty {
             if self.iconSystemName == "xcodeproj" {
                 Image(.xcodeproj)
+                    .imageScale(.large)
+                    .foregroundStyle(isSelected ? .white : .blue)
+            } else if self.iconSystemName == "xcodeproj.fill" {
+                Image(.xcodeprojFill)
+                    .imageScale(.large)
+                    .foregroundStyle(isSelected ? .white : .blue)
             } else {
                 Image(systemName: self.iconSystemName)
             }
@@ -65,6 +71,8 @@ final class QueryItem: Codable, Identifiable {
         if !self.iconSystemName.isEmpty {
             if self.iconSystemName == "xcodeproj" {
                 Image(.xcodeproj)
+            } else if self.iconSystemName == "xcodeproj.fill" {
+                Image(.xcodeprojFill)
             } else {
                 Image(systemName: self.iconSystemName)
             }
@@ -127,14 +135,16 @@ final class QueryItem: Codable, Identifiable {
     
     func open(query: String) {
         self.openedRecords[query, default: 0] += 1
-        withErrorPresented {
-            let path = self.item.appending(path: self.openableFileRelativePath)
-            try await path.open()
-            
-            Task.detached {
-                try ModelProvider.instance.save()
-                Task { @MainActor in
-                    ModelProvider.instance.searchText = ""
+        Task {
+            await withErrorPresented {
+                let path = self.item.appending(path: self.openableFileRelativePath)
+                try await path.open()
+                
+                Task.detached {
+                    try ModelProvider.instance.save()
+                    Task { @MainActor in
+                        ModelProvider.instance.searchText = ""
+                    }
                 }
             }
         }

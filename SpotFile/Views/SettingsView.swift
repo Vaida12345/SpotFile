@@ -84,7 +84,7 @@ struct SettingsView: View {
             }
             
             return HStack {
-                item.smallIconView
+                item.smallIconView(isSelected: selectedItem == item.id)
                     .frame(width: 20, height: 20)
                 Text(value)
             }

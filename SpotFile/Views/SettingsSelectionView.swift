@@ -180,7 +180,7 @@ struct SettingsSelectionView: View {
             self.selection.query = project.stem
             
             if shouldReplaceIcon {
-                self.selection.iconSystemName = "xcodeproj"
+                self.selection.iconSystemName = "xcodeproj.fill"
             }
         } else if item.appending(path: "Package.swift").exists {
             self.selection.openableFileRelativePath = "Package.swift"
