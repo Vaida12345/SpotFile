@@ -271,9 +271,6 @@ final class QueryItem: Codable, Identifiable {
         
         
         func encode(to encoder: Encoder) throws {
-            let date = Date()
-            defer { print("encode icon took \(date.distanceToNow())") }
-            
             var container = encoder.singleValueContainer()
             
             guard image != nil else { try container.encodeNil(); return }
@@ -357,9 +354,6 @@ final class QueryItem: Codable, Identifiable {
     }
     
     func encode(to encoder: Encoder) throws {
-        let date = Date()
-        defer { print("encode query item took \(date.distanceToNow())") }
-        
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.id, forKey: .id)
         try container.encode(self._query, forKey: ._query)

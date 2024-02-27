@@ -26,8 +26,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     var searchText: String = "" {
         didSet {
-            let date = Date()
-            
             guard !searchText.isEmpty else {
                 selectionIndex = 0
                 matches.removeAll()
@@ -42,6 +40,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 selectionIndex = 0
                 
                 Task.detached {
+                    let date = Date()
                     var matches: [(QueryItem, AttributedString)] = []
                     let total = !previousSearchText.isEmpty && searchText.hasPrefix(previousSearchText) ? self.matches.map(\.1) : self.items
                     
@@ -54,8 +53,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         $0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0
                     }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
                     
+                    print("conducting search took \(date.distanceToNow())")
                     Task { @MainActor in
-                        print("conducting search took \(date.distanceToNow())")
                         self.matches = _matches
                         self.isSearching = false
                         self.previousSearchText = searchText
