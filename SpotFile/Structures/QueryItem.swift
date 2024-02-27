@@ -123,12 +123,13 @@ final class QueryItem: Codable, Identifiable {
         withErrorPresented {
             let path = self.item
             try path.reveal()
+            Task { @MainActor in
+                NSApp.hide(nil)
+                ModelProvider.instance.searchText = ""
+            }
             
             Task.detached {
                 try ModelProvider.instance.save()
-                Task { @MainActor in
-                    ModelProvider.instance.searchText = ""
-                }
             }
         }
     }
@@ -139,12 +140,13 @@ final class QueryItem: Codable, Identifiable {
             await withErrorPresented {
                 let path = self.item.appending(path: self.openableFileRelativePath)
                 try await path.open()
+                Task { @MainActor in
+                    NSApp.hide(nil)
+                    ModelProvider.instance.searchText = ""
+                }
                 
                 Task.detached {
                     try ModelProvider.instance.save()
-                    Task { @MainActor in
-                        ModelProvider.instance.searchText = ""
-                    }
                 }
             }
         }
