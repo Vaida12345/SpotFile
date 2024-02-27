@@ -21,23 +21,31 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         }
     }
     
+    @ObservationIgnored
+    private var previousSearchText: String = ""
+    
     var searchText: String = "" {
         didSet {
-            self.hasBeenRecorded = false
+            let date = Date()
+            
             guard !searchText.isEmpty else {
                 selectionIndex = 0
                 matches.removeAll()
+                previousSearchText = ""
                 return
             }
             
             let searchText = searchText
+            let previousSearchText = previousSearchText
             Task { @MainActor in
                 isSearching = true
                 selectionIndex = 0
                 
                 Task.detached {
                     var matches: [(QueryItem, AttributedString)] = []
-                    for item in self.items {
+                    let total = !previousSearchText.isEmpty && searchText.hasPrefix(previousSearchText) ? self.matches.map(\.1) : self.items
+                    
+                    for item in total {
                         if let string = item.match(query: self.searchText) {
                             matches.append((item, string))
                         }
@@ -47,8 +55,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                     }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
                     
                     Task { @MainActor in
+                        print("conducting search took \(date.distanceToNow())")
                         self.matches = _matches
                         self.isSearching = false
+                        self.previousSearchText = searchText
                     }
                 }
             }
@@ -60,9 +70,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     var isSearching = false
     
     var matches: [(Int, QueryItem, AttributedString)] = []
-    
-    
-    var hasBeenRecorded: Bool = false
     
     
     func submitItem() {
