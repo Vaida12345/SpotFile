@@ -27,6 +27,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         }
     }
     
+    @ObservationIgnored
     var isItemUpdated = false
     
     var openableFileRelativePath: String
@@ -38,12 +39,15 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     var mustIncludeFirstKeyword = false
     
+    @ObservationIgnored
     var openedRecords: [String: Int]
     
     
     /// the returned components are lowercased.
+    @ObservationIgnored
     var queryComponents: [QueryComponent] = []
     
+    @ObservationIgnored
     var children: [QueryItemChild] = []
     
     var childOptions: ChildOptions = .init()
@@ -57,7 +61,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     func updateChildren() async throws {
         var children: [FinderItem] = []
         for await child in try item.children(range: childOptions.enumeration ? .enumeration : .contentsOfDirectory) {
-            guard (child.isDirectory && childOptions.includeFolder) || (child.isFile && childOptions.includeFile) else { continue }
+            guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { continue }
             children.append(child)
         }
         
@@ -141,9 +145,9 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         try container.encode(self._openableFileRelativePath, forKey: ._openableFileRelativePath)
         try container.encode(self._icon, forKey: ._icon)
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
-        try container.encode(self._openedRecords, forKey: ._openedRecords)
+        try container.encode(self.openedRecords, forKey: ._openedRecords)
         try container.encode(self._mustIncludeFirstKeyword, forKey: ._mustIncludeFirstKeyword)
-        try container.encode(self._children, forKey: ._children)
+        try container.encode(self.children, forKey: ._children)
         try container.encode(self._childOptions, forKey: ._childOptions)
     }
     
@@ -165,14 +169,14 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)
         self._icon = try container.decode(Icon.self, forKey: ._icon)
         self._iconSystemName = try container.decode(String.self, forKey: ._iconSystemName)
-        self._openedRecords = try container.decode([String:Int].self, forKey: ._openedRecords)
+        self.openedRecords = try container.decode([String:Int].self, forKey: ._openedRecords)
         self._mustIncludeFirstKeyword = try container.decode(Bool.self, forKey: ._mustIncludeFirstKeyword)
         self.childOptions = try container.decode(ChildOptions.self, forKey: ._childOptions)
-        self._queryComponents = updateQueryComponents()
+        self.queryComponents = updateQueryComponents()
         
-        self._children = try container.decode([QueryItemChild].self, forKey: ._children)
-        for index in 0..<self._children.count {
-            self._children[index].parent = self
+        self.children = try container.decode([QueryItemChild].self, forKey: ._children)
+        for index in 0..<self.children.count {
+            self.children[index].parent = self
         }
     }
 }

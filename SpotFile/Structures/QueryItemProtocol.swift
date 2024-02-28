@@ -205,7 +205,11 @@ extension QueryItemProtocol {
     func reveal(query: String) {
         self.openedRecords[query, default: 0] += 1
         withErrorPresented {
-            let path = self.item
+            let path = if self is QueryItem {
+                self.item
+            } else {
+                self.item.appending(path: openableFileRelativePath)
+            }
             try path.reveal()
             Task { @MainActor in
                 NSApp.hide(nil)

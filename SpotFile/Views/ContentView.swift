@@ -32,6 +32,7 @@ struct ContentView: View {
                             for item in await modelProvider.items {
                                 try await item.updateChildren()
                             }
+                            try await modelProvider.save()
                             Task { @MainActor in
                                 isSyncing = false
                             }

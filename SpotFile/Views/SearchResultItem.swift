@@ -21,6 +21,15 @@ struct SearchResultItem: View {
     
     @State private var hovering = false
     
+    var help: String {
+        if !item.openableFileRelativePath.isEmpty,
+            let name = item.openableFileRelativePath.components(separatedBy: "/").last {
+            return name
+        } else {
+            return item.openableFileRelativePath
+        }
+    }
+    
     
     var body: some View {
         HStack {
@@ -44,7 +53,7 @@ struct SearchResultItem: View {
             if index == modelProvider.selectionIndex {
                 Button {
                     withErrorPresented {
-                        try item.item.reveal()
+                        item.reveal(query: modelProvider.searchText)
                     }
                 } label: {
                     Image(systemName: "magnifyingglass")
@@ -55,6 +64,7 @@ struct SearchResultItem: View {
                 .keyboardShortcut(.return, modifiers: .command)
             }
         }
+        .help(help)
         .foregroundStyle(index == modelProvider.selectionIndex ? .white : .primary)
         .padding(.vertical, 5)
         .padding(.leading, 7)
