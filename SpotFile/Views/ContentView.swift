@@ -16,12 +16,42 @@ struct ContentView: View {
     @EnvironmentObject private var appDelegate: SpotFileApp.ApplicationDelegate
     
     
+    @State private var isSyncing = false
+    
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
             SuggestionTextField(modelProvider: modelProvider)
                 .autocorrectionDisabled()
             
             if modelProvider.searchText.isEmpty {
+                if modelProvider.items.contains(where: { $0.childOptions.isEnabled }) {
+                    MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" R")) {
+                        isSyncing = true
+                        Task.detached {
+                            for item in await modelProvider.items {
+                                try await item.updateChildren()
+                            }
+                            Task { @MainActor in
+                                isSyncing = false
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text("Sync")
+                            
+                            if isSyncing {
+                                ProgressView()
+                                    .scaleEffect(0.5)
+                                    .frame(width: 10, height: 10)
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                    .keyboardShortcut(.init("r"), modifiers: .command)
+                }
+                
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" ,")) {
                     NSApp.setActivationPolicy(.regular)
                     openWindow(id: "configuration")
