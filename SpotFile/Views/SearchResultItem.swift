@@ -24,13 +24,18 @@ struct SearchResultItem: View {
     
     var body: some View {
         HStack {
-            if let item = item as? QueryItem {
-                item.smallIconView(isSelected: index == modelProvider.selectionIndex)
-                    .frame(width: 20, height: 20)
-            } else if let item = item as? QueryItemChild {
-                item.smallIconView(isSelected: index == modelProvider.selectionIndex)
-                    .frame(width: 20, height: 20)
+            Group {
+                if let item = item as? QueryItem {
+                    item.smallIconView(isSelected: index == modelProvider.selectionIndex)
+                } else if index == 0, let item = item as? QueryItemChild {
+                    item.smallIconView(isSelected: index == modelProvider.selectionIndex)
+                } else {
+                    Rectangle()
+                        .fill(.clear)
+                        .frame(width: 20, height: 20)
+                }
             }
+            .frame(width: 20, height: 20)
             
             Text(match)
             

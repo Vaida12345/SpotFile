@@ -50,7 +50,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         let previousSearchText = previous.searchText
         Task { @MainActor in
             selectionIndex = 0
-            let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
+            let canUseLastResult = searchText.hasPrefix(previousSearchText)
             previous.task?.cancel()
             
             previous.task = Task.detached {
@@ -61,6 +61,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                     []
                 } else {
                     try! await total.stream.compactMap { item in
+                        try Task.checkCancellation()
+                        
                         if let string = item.match(query: self.searchText) {
                             return (item, string)
                         } else {
@@ -68,17 +70,22 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         }
                     }.sequence
                 }
+                try Task.checkCancellation()
                 
                 if matches.isEmpty && self.previous.matches.count == 1 {
                     let total = !self.previous.childrenMatches.isEmpty && canUseLastResult ? self.previous.childrenMatches : self.previous.matches.first!.children
                     
                     matches = try! await total.stream.compactMap { item in
+                        try Task.checkCancellation()
+                        
                         if let string = item.match(query: self.searchText) {
                             return (item, string)
                         } else {
                             return nil
                         }
                     }.sequence
+                    
+                    self.previous.childrenMatches = matches.map { $0.0 as! QueryItemChild }
                 } else {
                     self.previous.matches = matches.map { $0.0 as! QueryItem }
                     self.previous.childrenMatches = []
@@ -87,6 +94,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 let _matches = matches.sorted(on: {
                     ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.count)
                 }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                
+                try Task.checkCancellation()
                 
                 print("conducting search took \(date.distanceToNow())")
                 Task { @MainActor in

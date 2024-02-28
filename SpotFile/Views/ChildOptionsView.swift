@@ -26,7 +26,7 @@ struct ChildOptionsView: View {
                         if isUpdating {
                             ProgressView()
                                 .scaleEffect(0.5)
-                                .offset(x: 5)
+                                .frame(width: 10, height: 10)
                         }
                         Button("Update") {
                             Task {
@@ -40,7 +40,9 @@ struct ChildOptionsView: View {
                     }
                     Text("When enabled, you can also search for contents of the folder by typing its name")
                         .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.leading)
+                          
+                      (Text("Please use the *update* button to notify the app of any changes, or the ") + Text(Image(systemName: "arrow.triangle.2.circlepath")) + Text("*Sync* button in menu bar."))
+                        .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
                     
                     Divider()
                     
@@ -53,15 +55,22 @@ struct ChildOptionsView: View {
                             Toggle("Files", isOn: $options.includeFile)
                                 .disabled(!options.includeFolder)
                         }
-                        .padding(.bottom)
+                        
+                        Text("Define what kind of files should be included in search results.")
+                            .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
+                            .padding(.bottom)
                         
                         Toggle("Enable enumeration", isOn: $options.enumeration)
+                        
+                        Text("If enabled, contents of subfolders, and so on will be included. Note that large folders will cause the app laggy.")
+                            .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
                     }
                     .disabled(!options.isEnabled)
                     .modifier(enabled: !options.isEnabled) { view in
                         view.foregroundStyle(.tertiary)
                     }
                 }
+                .multilineTextAlignment(.leading)
             }
         }
     }

@@ -133,10 +133,7 @@ extension QueryItemProtocol {
         return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
     }
     
-    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {
-        let date = Date()
-        defer { print("one iteration took \(date.distanceToNow())") }
-        
+    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {        
         guard !_query.isEmpty else {
             return AttributedString(components.map(\.value).joined(separator: "")) // end, returning trailing components
         }
