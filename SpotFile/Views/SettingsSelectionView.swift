@@ -108,6 +108,8 @@ struct SettingsSelectionView: View {
                                     }
                                 }
                             }
+                            
+                            ChildOptionsView(item: selection, options: $selection.childOptions)
                         }
                         .padding(.vertical)
                         .multilineTextAlignment(.trailing)
@@ -167,6 +169,7 @@ struct SettingsSelectionView: View {
     
     func add(item: FinderItem) async {
         self.selection.item = item
+        self.selection.childOptions.isDirectory = item.isDirectory && !item.isPackage
         try? await self.selection.updateIcon()
         
         if self.selection.query == "new" {
@@ -194,4 +197,5 @@ struct SettingsSelectionView: View {
 
 #Preview {
     SettingsSelectionView(selection: .preview)
+        .environment(ModelProvider.preview)
 }

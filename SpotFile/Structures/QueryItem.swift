@@ -11,13 +11,13 @@ import SwiftUI
 
 
 @Observable
-final class QueryItem: Codable, Identifiable {
+final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     let id: UUID
     
     var query: String {
         didSet {
-            updateQueryComponents()
+            self.queryComponents = updateQueryComponents()
         }
     }
     
@@ -44,282 +44,38 @@ final class QueryItem: Codable, Identifiable {
     /// the returned components are lowercased.
     var queryComponents: [QueryComponent] = []
     
-    @ViewBuilder
-    func smallIconView(isSelected: Bool) -> some View {
-        if !self.iconSystemName.isEmpty {
-            if self.iconSystemName == "xcodeproj" {
-                Image(.xcodeproj)
-                    .imageScale(.large)
-                    .foregroundStyle(isSelected ? .white : .blue)
-            } else if self.iconSystemName == "xcodeproj.fill" {
-                Image(.xcodeprojFill)
-                    .imageScale(.large)
-                    .foregroundStyle(isSelected ? .white : .blue)
-            } else {
-                Image(systemName: self.iconSystemName)
-            }
-        } else if let image = self.icon.image {
-            Image(nsImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-        } else {
-            Image(systemName: "folder.badge.plus")
-        }
-    }
+    var children: [QueryItemChild] = []
     
-    var iconView: Image {
-        if !self.iconSystemName.isEmpty {
-            if self.iconSystemName == "xcodeproj" {
-                Image(.xcodeproj)
-            } else if self.iconSystemName == "xcodeproj.fill" {
-                Image(.xcodeprojFill)
-            } else {
-                Image(systemName: self.iconSystemName)
-            }
-        } else if let image = self.icon.image {
-            Image(nsImage: image)
-        } else {
-            Image(systemName: "folder.badge.plus")
-        }
-    }
+    var childOptions: ChildOptions = .init()
     
-    private func updateQueryComponents() {
-        var components: [QueryComponent] = []
-        
-        var index = self.query.startIndex
-        var cumulative = ""
-        
-        while index < self.query.endIndex {
-            if (self.query[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) {
-                components.append(.content(cumulative))
-                cumulative = ""
-                continue
-            } else if self.query[index].isWhitespace || QueryItem.separators.contains(self.query[index]) {
-                components.append(.content(cumulative))
-                components.append(.spacer("\(self.query[index])"))
-                cumulative = ""
-                self.query.formIndex(after: &index)
-                continue
-            }
-            
-            cumulative.append(self.query[index])
-            self.query.formIndex(after: &index)
-        }
-        
-        if !cumulative.isEmpty {
-            components.append(.content(cumulative))
-        }
-        
-        queryComponents = components
-    }
     
     func updateIcon() async throws {
         let icon = try await self.item.preview(size: .square(64))
         self.icon.image = icon
     }
     
-    func reveal(query: String) {
-        self.openedRecords[query, default: 0] += 1
-        withErrorPresented {
-            let path = self.item
-            try path.reveal()
-            Task { @MainActor in
-                NSApp.hide(nil)
-                ModelProvider.instance.searchText = ""
-            }
-            
-            Task.detached {
-                try ModelProvider.instance.save()
-            }
+    func updateChildren() async throws {
+        var children: [FinderItem] = []
+        for await child in try item.children(range: childOptions.enumeration ? .enumeration : .contentsOfDirectory) {
+            guard (child.isDirectory && childOptions.includeFolder) || (child.isFile && childOptions.includeFile) else { continue }
+            children.append(child)
         }
-    }
-    
-    func open(query: String) {
-        self.openedRecords[query, default: 0] += 1
-        Task {
-            await withErrorPresented {
-                let path = self.item.appending(path: self.openableFileRelativePath)
-                try await path.open()
-                Task { @MainActor in
-                    NSApp.hide(nil)
-                    ModelProvider.instance.searchText = ""
-                }
-                
-                Task.detached {
-                    try ModelProvider.instance.save()
-                }
-            }
-        }
-    }
-    
-    
-    static let separators: [Character] = ["_", "/"]
-    
-    func match(query: String) -> AttributedString? {
-        let queryComponents = self.queryComponents
-//        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
-//            guard query.lowercased().hasPrefix(firstComponent.lowercased()) else { return nil }
-//        }
         
-//        var string = AttributedString(self.query)
-//        if let range = string.range(of: query, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]) {
-//            string[range].inlinePresentationIntent = .stronglyEmphasized
-//            return string
-//        }
-        
-//        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
-//            // consume the first query component
-//            query.removeFirst(firstComponent.count)
-//            var attributed = AttributedString(firstComponent)
-//            attributed.inlinePresentationIntent = .stronglyEmphasized
-//            queryComponents.removeFirst()
-//            resultingString.append(attributed)
-//        }
-        
-        return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
-    }
-    
-    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {
-        guard !_query.isEmpty else {
-            return AttributedString(components.map(\.value).joined(separator: "")) // end, returning trailing components
-        }
-        guard let component = components.first else {
-            // reached end of components
-            return nil
-        }
-        var query = _query
-        
-        switch component {
-        case .spacer(let spacer):
-            var attributed = AttributedString(String(spacer))
-            if spacer.lowercased() == query.first?.lowercased() {
-                query.removeFirst()
-                attributed.inlinePresentationIntent = .stronglyEmphasized
-            }
-            return __recursiveMatch(_query: query, components: components.dropFirst()).map { attributed + $0 }
-            
-        case .content(let content):
-            if QueryItem.separators.contains(query.first!) || query.first!.isWhitespace { // query cannot be empty, as ensured by the guard on the first line
-                // okay. maybe we should ignore the white space, maybe we should keep it
-                // prefer keep it
-                
-                // if keep it, then this content cannot be matched, skipped.
-                if components.count != 1,
-                   let next = __recursiveMatch(_query: query, components: components.dropFirst()) {
-                    return AttributedString(content)  + next
-                }
-                
-                // still here? then cannot keep it
-                if let next = __recursiveMatch(_query: query.dropFirst(), components: components) {
-                    return next
-                }
-                
-                // no? then no match
-                return nil
-            }
-            
-            var contentIterator = content.makeIterator()
-            var attributed = AttributedString()
-            while let c = contentIterator.next() {
-                if c.lowercased() == query.first?.lowercased() {
-                    query.removeFirst()
-                    var _attributed = AttributedString(String(c))
-                    _attributed.inlinePresentationIntent = .stronglyEmphasized
-                    attributed += _attributed
-                } else {
-                    if attributed.runs.isEmpty {
-                        if self.mustIncludeFirstKeyword && isFirst {
-                            return nil
-                        }
-                        // does not match at all
-                        return __recursiveMatch(_query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
-                    }
-                    var cx = String(c)
-                    while let next = contentIterator.next() { cx.append(next) }
-                    attributed += AttributedString(cx)
-                    break
-                }
-            }
-            
-            return __recursiveMatch(_query: query, components: components.dropFirst()).map({ attributed + $0 }) ?? (isFirst && self.mustIncludeFirstKeyword ? nil : __recursiveMatch(_query: _query, components: components.dropFirst()).map({ AttributedString(content) + $0 }))
-        }
+        self.children = children.map { QueryItemChild(parent: self, openableFileRelativePath: $0.relativePath(to: item) ?? "", openedRecords: [:]) }
     }
     
     func delete() throws {
         try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(self.icon.id).heic").removeIfExists()
         try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: self.id.description).removeIfExists()
         
-        self.isItemUpdated = true
+        self.isItemUpdated = true // set to true is case undo
         self.icon.isUpdated = true
     }
     
-    /// An icon, remember to resize the icon to 32 x 32
-    final class Icon: Codable {
-        
-        var image: NativeImage? {
-            didSet {
-                isUpdated = true
-                Task.detached {
-                    try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(self.id).heic").removeIfExists()
-                }
-            }
-        }
-        
-        var isUpdated: Bool = false
-        
-        let id: UUID
-        
-        
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            
-            guard image != nil else { try container.encodeNil(); return }
-            try container.encode(id)
-            
-            guard isUpdated else { return }
-            
-            let iconDir = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons")
-            try image?.write(to: iconDir.appending(path: "\(id).heic"), option: .heic)
-            self.isUpdated = false
-        }
-        
-        init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            guard !container.decodeNil() else {
-                self.id = UUID()
-                return
-            }
-            let id = try container.decode(UUID.self)
-            guard let image = NativeImage(at: FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(id).heic")) else { throw ErrorManager("Cannot decode the image") }
-            self.image = image
-            self.id = id
-        }
-        
-        init(image: NativeImage?) {
-            self.image = image
-            self.id = UUID()
-        }
-        
-        static let preview = Icon(image: NativeImage())
-    }
     
-    enum QueryComponent: Codable {
-        
-        case spacer(String)
-        
-        case content(String)
-        
-        
-        var value: String {
-            switch self {
-            case .spacer(let string):
-                return string
-            case .content(let string):
-                return string
-            }
-        }
-        
-    }
+    static let separators: [Character] = ["_", "/"]
+    
+    
     
     init(query: String, item: FinderItem, openableFileRelativePath: String) {
         self.id = UUID()
@@ -329,7 +85,7 @@ final class QueryItem: Codable, Identifiable {
         self.icon = Icon(image: nil)
         self.openedRecords = [:]
         
-        updateQueryComponents()
+        self.queryComponents = updateQueryComponents()
     }
     
     static let preview = QueryItem(query: "swift testRoom",
@@ -340,6 +96,23 @@ final class QueryItem: Codable, Identifiable {
         QueryItem(query: "new", item: .homeDirectory, openableFileRelativePath: "")
     }
     
+    struct ChildOptions: Codable {
+        
+        /// Whether this item is a directory, and not a package.
+        var isDirectory: Bool = false
+        
+        var isEnabled: Bool = false
+        
+        var includeFolder: Bool = true
+        
+        var includeFile: Bool = false
+        
+        var enumeration: Bool = true
+        
+    }
+    
+    
+    // MARK: - Codable
     
     enum CodingKeys: CodingKey {
         case id
@@ -349,8 +122,9 @@ final class QueryItem: Codable, Identifiable {
         case _iconSystemName
         case _openedCount
         case _mustIncludeFirstKeyword
-        case _queryComponents
         case _openedRecords
+        case _children
+        case _childOptions
     }
     
     func encode(to encoder: Encoder) throws {
@@ -369,7 +143,8 @@ final class QueryItem: Codable, Identifiable {
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
         try container.encode(self._openedRecords, forKey: ._openedRecords)
         try container.encode(self._mustIncludeFirstKeyword, forKey: ._mustIncludeFirstKeyword)
-        try container.encode(self._queryComponents, forKey: ._queryComponents)
+        try container.encode(self._children, forKey: ._children)
+        try container.encode(self._childOptions, forKey: ._childOptions)
     }
     
     init(from decoder: Decoder) throws {
@@ -388,10 +163,16 @@ final class QueryItem: Codable, Identifiable {
         self._item = FinderItem(at: url)
         
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)
-        self._icon = try container.decode(QueryItem.Icon.self, forKey: ._icon)
+        self._icon = try container.decode(Icon.self, forKey: ._icon)
         self._iconSystemName = try container.decode(String.self, forKey: ._iconSystemName)
-        self._openedRecords = try container.decodeIfPresent([String:Int].self, forKey: ._openedRecords) ?? [:]
+        self._openedRecords = try container.decode([String:Int].self, forKey: ._openedRecords)
         self._mustIncludeFirstKeyword = try container.decode(Bool.self, forKey: ._mustIncludeFirstKeyword)
-        self._queryComponents = try container.decode([QueryItem.QueryComponent].self, forKey: ._queryComponents)
+        self.childOptions = try container.decode(ChildOptions.self, forKey: ._childOptions)
+        self._queryComponents = updateQueryComponents()
+        
+        self._children = try container.decode([QueryItemChild].self, forKey: ._children)
+        for index in 0..<self._children.count {
+            self._children[index].parent = self
+        }
     }
 }

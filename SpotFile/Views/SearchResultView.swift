@@ -26,7 +26,7 @@ struct SearchResultView: View {
             .padding()
             .frame(maxWidth: .infinity)
         } else {
-            ScrollView {
+            ScrollView(.vertical) {
                 VStack(spacing: 4) {
                     ForEach(modelProvider.matches, id: \.1.id) { (index, item, match) in
                         SearchResultItem(index: index, item: item, match: match)

@@ -12,7 +12,7 @@ struct SearchResultItem: View {
     
     let index: Int
     
-    let item: QueryItem
+    let item: any QueryItemProtocol
     
     let match: AttributedString
     
@@ -24,8 +24,13 @@ struct SearchResultItem: View {
     
     var body: some View {
         HStack {
-            item.smallIconView(isSelected: index == modelProvider.selectionIndex)
-                .frame(width: 20, height: 20)
+            if let item = item as? QueryItem {
+                item.smallIconView(isSelected: index == modelProvider.selectionIndex)
+                    .frame(width: 20, height: 20)
+            } else if let item = item as? QueryItemChild {
+                item.smallIconView(isSelected: index == modelProvider.selectionIndex)
+                    .frame(width: 20, height: 20)
+            }
             
             Text(match)
             
@@ -88,7 +93,7 @@ struct SearchResultItem: View {
 }
 
 #Preview {
-    SearchResultItem(index: 0, item: .preview, match: AttributedString("here"))
+    SearchResultItem(index: 0, item: QueryItem.preview, match: AttributedString("here"))
         .environment(ModelProvider.preview)
         .frame(width: 200)
 }

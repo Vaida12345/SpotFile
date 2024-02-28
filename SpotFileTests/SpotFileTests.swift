@@ -12,10 +12,11 @@ import SpotFile
 final class SpotFileTests: XCTestCase {
 
     func testQueryItem() throws {
-        let item = QueryItem(query: "swift structum", item: .desktopDirectory, openableFileRelativePath: "")
-        item.mustIncludeFirstKeyword = true
+        let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
         print(item.queryComponents)
-        print(item.match(query: "structum")?.description ?? "nil")
+        let date = Date()
+        print(item.match(query: "maths readings")?.description ?? "nil")
+        print(date.distanceToNow())
     }
 
 }

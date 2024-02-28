@@ -22,53 +22,82 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }
     
     @ObservationIgnored
-    private var previousSearchText: String = ""
+    private var previous = PreviousState()
     
     var searchText: String = "" {
         didSet {
-            guard !searchText.isEmpty else {
-                selectionIndex = 0
-                matches.removeAll()
-                previousSearchText = ""
-                return
-            }
+            updateSearches()
+        }
+    }
+    
+    var selectionIndex: Int = 0
+    
+    var matches: [(Int, any QueryItemProtocol, AttributedString)] = []
+    
+    var isSearching = false
+    
+    
+    func updateSearches() {
+        guard !searchText.isEmpty else {
+            selectionIndex = 0
+            matches.removeAll()
+            previous.reset()
+            return
+        }
+        
+        isSearching = true
+        let searchText = searchText
+        let previousSearchText = previous.searchText
+        Task { @MainActor in
+            selectionIndex = 0
+            let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
+            previous.task?.cancel()
             
-            let searchText = searchText
-            let previousSearchText = previousSearchText
-            Task { @MainActor in
-                isSearching = true
-                selectionIndex = 0
+            previous.task = Task.detached {
+                let date = Date()
+                let total = !previousSearchText.isEmpty && canUseLastResult ? self.previous.matches : self.items
                 
-                Task.detached {
-                    let date = Date()
-                    var matches: [(QueryItem, AttributedString)] = []
-                    let total = !previousSearchText.isEmpty && searchText.hasPrefix(previousSearchText) ? self.matches.map(\.1) : self.items
-                    
-                    for item in total {
+                var matches: [(any QueryItemProtocol, AttributedString)] = if canUseLastResult && !self.previous.childrenMatches.isEmpty {
+                    []
+                } else {
+                    try! await total.stream.compactMap { item in
                         if let string = item.match(query: self.searchText) {
-                            matches.append((item, string))
+                            return (item, string)
+                        } else {
+                            return nil
                         }
-                    }
-                    let _matches = matches.sorted(on: {
-                        $0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0
-                    }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                    }.sequence
+                }
+                
+                if matches.isEmpty && self.previous.matches.count == 1 {
+                    let total = !self.previous.childrenMatches.isEmpty && canUseLastResult ? self.previous.childrenMatches : self.previous.matches.first!.children
                     
-                    print("conducting search took \(date.distanceToNow())")
-                    Task { @MainActor in
-                        self.matches = _matches
-                        self.isSearching = false
-                        self.previousSearchText = searchText
-                    }
+                    matches = try! await total.stream.compactMap { item in
+                        if let string = item.match(query: self.searchText) {
+                            return (item, string)
+                        } else {
+                            return nil
+                        }
+                    }.sequence
+                } else {
+                    self.previous.matches = matches.map { $0.0 as! QueryItem }
+                    self.previous.childrenMatches = []
+                }
+                
+                let _matches = matches.sorted(on: {
+                    ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.count)
+                }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                
+                print("conducting search took \(date.distanceToNow())")
+                Task { @MainActor in
+                    self.matches = _matches
+                    self.previous.searchText = searchText
+                    self.previous.task = nil
+                    self.isSearching = false
                 }
             }
         }
     }
-    
-    var selectionIndex: Int = 0 
-    
-    var isSearching = false
-    
-    var matches: [(Int, QueryItem, AttributedString)] = []
     
     
     func submitItem() {
@@ -83,6 +112,26 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     func revealItem() {
         guard selectionIndex < self.matches.count else { return }
         self.matches[selectionIndex].1.reveal(query: self.searchText)
+    }
+    
+    
+    struct PreviousState {
+        
+        var searchText: String = ""
+        
+        var matches: [QueryItem] = []
+        
+        var childrenMatches: [QueryItemChild] = []
+        
+        var task: Task<Void, any Error>?
+        
+        mutating func reset() {
+            self.searchText = ""
+            self.matches = []
+            self.childrenMatches = []
+            self.task = nil
+        }
+        
     }
     
     
