@@ -50,17 +50,23 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         let previousSearchText = previous.searchText
         Task { @MainActor in
             selectionIndex = 0
-            let canUseLastResult = searchText.hasPrefix(previousSearchText)
             previous.task?.cancel()
             
             previous.task = Task.detached {
                 let date = Date()
+                let canUseLastResult = searchText.hasPrefix(previousSearchText)
+                if searchText.count < previousSearchText.count {
+                    // is deleting, then wait for a sec before conducting any search
+                    try await Task.sleep(for: .milliseconds(50))
+                }
+                try Task.checkCancellation()
+                
                 let total = !previousSearchText.isEmpty && canUseLastResult ? self.previous.matches : self.items
                 
                 var matches: [(any QueryItemProtocol, AttributedString)] = if canUseLastResult && !self.previous.childrenMatches.isEmpty {
                     []
                 } else {
-                    try! await total.stream.compactMap { item in
+                    try await total.stream.compactMap { item in
                         try Task.checkCancellation()
                         
                         if let string = item.match(query: self.searchText) {
@@ -75,7 +81,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 if matches.isEmpty && self.previous.matches.count == 1 {
                     let total = !self.previous.childrenMatches.isEmpty && canUseLastResult ? self.previous.childrenMatches : self.previous.matches.first!.children
                     
-                    matches = try! await total.stream.compactMap { item in
+                    matches = try await total.stream.compactMap { item in
                         try Task.checkCancellation()
                         
                         if let string = item.match(query: self.searchText) {
