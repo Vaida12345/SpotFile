@@ -145,12 +145,17 @@ extension QueryItemProtocol {
         
         switch component {
         case .spacer(let spacer):
-            var attributed = AttributedString(String(spacer))
-            if spacer.lowercased() == query.first?.lowercased() {
-                query.removeFirst()
-                attributed.inlinePresentationIntent = .stronglyEmphasized
+            return __recursiveMatch(_query: query, components: components.dropFirst()).map {
+                var attributed: AttributedString
+                if spacer.lowercased() == query.first?.lowercased() {
+                    query.removeFirst()
+                    attributed = AttributedString(String(spacer), attributes: emphasizedAttributeContainer)
+                } else {
+                    attributed = AttributedString(String(spacer))
+                }
+                
+                return attributed + $0
             }
-            return __recursiveMatch(_query: query, components: components.dropFirst()).map { attributed + $0 }
             
         case .content(let content):
             if QueryItem.separators.contains(query.first!) || query.first!.isWhitespace { // query cannot be empty, as ensured by the guard on the first line
@@ -160,7 +165,7 @@ extension QueryItemProtocol {
                 // if keep it, then this content cannot be matched, skipped.
                 if components.count != 1,
                    let next = __recursiveMatch(_query: query, components: components.dropFirst()) {
-                    return AttributedString(content)  + next
+                    return AttributedString(content) + next
                 }
                 
                 // still here? then cannot keep it
@@ -173,29 +178,38 @@ extension QueryItemProtocol {
             }
             
             var contentIterator = content.makeIterator()
-            var attributed = AttributedString()
+            var cumulative = ""
+            var remaining = ""
             while let c = contentIterator.next() {
                 if c.lowercased() == query.first?.lowercased() {
                     query.removeFirst()
-                    var _attributed = AttributedString(String(c))
-                    _attributed.inlinePresentationIntent = .stronglyEmphasized
-                    attributed += _attributed
+                    cumulative.append(c)
                 } else {
-                    if attributed.runs.isEmpty {
+                    if cumulative.isEmpty {
                         if self.mustIncludeFirstKeyword && isFirst {
                             return nil
                         }
                         // does not match at all
                         return __recursiveMatch(_query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
                     }
-                    var cx = String(c)
-                    while let next = contentIterator.next() { cx.append(next) }
-                    attributed += AttributedString(cx)
+                    remaining.append(c)
+                    while let next = contentIterator.next() { remaining.append(next) }
                     break
                 }
             }
             
-            return __recursiveMatch(_query: query, components: components.dropFirst()).map({ attributed + $0 }) ?? (isFirst && self.mustIncludeFirstKeyword ? nil : __recursiveMatch(_query: _query, components: components.dropFirst()).map({ AttributedString(content) + $0 }))
+            
+            if let match = __recursiveMatch(_query: query, components: components.dropFirst()) {
+                let attributed = AttributedString(cumulative, attributes: emphasizedAttributeContainer) + AttributedString(remaining)
+                return attributed + match
+            } else if isFirst && self.mustIncludeFirstKeyword {
+                return nil
+            } else if let match = __recursiveMatch(_query: _query, components: components.dropFirst()) {
+                let attributed = AttributedString(content)
+                return attributed + match
+            } else {
+                return nil
+            }
         }
     }
     
@@ -242,3 +256,10 @@ extension QueryItemProtocol {
         }
     }
 }
+
+
+private let emphasizedAttributeContainer = {
+    var container = AttributeContainer()
+    container.inlinePresentationIntent = .stronglyEmphasized
+    return container
+}()
