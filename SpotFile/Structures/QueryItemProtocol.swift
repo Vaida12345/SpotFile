@@ -109,16 +109,16 @@ extension QueryItemProtocol {
     }
     
     
-    func match(query: String) -> AttributedString? {
+    func match(query: String) -> Text? {
         let queryComponents = self.queryComponents
         let query = Array(query.lowercased()) // use array, as array is `RandomAccessCollection`.
         
         return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
     }
     
-    private func __recursiveMatch(_query: ArraySlice<Character>, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {
+    private func __recursiveMatch(_query: ArraySlice<Character>, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> Text? {
         guard !_query.isEmpty else {
-            return AttributedString(components.map(\.value).joined(separator: "")) // end, returning trailing components
+            return Text(components.map(\.value).joined(separator: "")) // end, returning trailing components
         }
         guard let component = components.first else {
             // reached end of components
@@ -135,7 +135,7 @@ extension QueryItemProtocol {
             }
             
             return __recursiveMatch(_query: query, components: components.dropFirst()).map {
-                return AttributedString(spacer, attributes: shouldEmphasize ? emphasizedAttributeContainer : .init()) + $0
+                return Text(spacer).bold(shouldEmphasize) + $0
             }
             
         case .content(let content):
@@ -146,7 +146,7 @@ extension QueryItemProtocol {
                 // if keep it, then this content cannot be matched, skipped.
                 if components.count != 1,
                    let next = __recursiveMatch(_query: query, components: components.dropFirst()) {
-                    return AttributedString(content) + next
+                    return Text(content) + next
                 }
                 
                 // still here? then cannot keep it
@@ -173,7 +173,7 @@ extension QueryItemProtocol {
                             return nil
                         }
                         // does not match at all
-                        return __recursiveMatch(_query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
+                        return __recursiveMatch(_query: query, components: components.dropFirst()).map { Text(content) + $0 }
                     }
                     remaining = content[index...]
                     break
@@ -184,12 +184,12 @@ extension QueryItemProtocol {
             
             
             if let match = __recursiveMatch(_query: query, components: components.dropFirst()) {
-                let attributed = AttributedString(cumulative, attributes: emphasizedAttributeContainer) + AttributedString(remaining)
+                let attributed = Text(cumulative).bold() + Text(remaining)
                 return attributed + match
             } else if isFirst && self.mustIncludeFirstKeyword {
                 return nil
             } else if let match = __recursiveMatch(_query: _query, components: components.dropFirst()) { // unconsumed, original query
-                let attributed = AttributedString(content)
+                let attributed = Text(content)
                 return attributed + match
             } else {
                 return nil

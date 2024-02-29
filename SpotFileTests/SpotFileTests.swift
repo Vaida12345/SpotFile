@@ -14,7 +14,10 @@ final class SpotFileTests: XCTestCase {
     func testQueryItem1() throws {
         let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
         
-        measure {
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1000
+        
+        measure(options: options) {
             _ = item.match(query: "maths readings")
         }   
     }
@@ -22,18 +25,20 @@ final class SpotFileTests: XCTestCase {
     func testQueryItem2() throws {
         let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
         
-        var options = XCTMeasureOptions()
+        let options = XCTMeasureOptions()
         options.iterationCount = 1000
         
         measure(options: options) {
+            let date = Date()
             _ = item.match(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics")
+            print(date.distanceToNow())
         }
     }
     
     func testQueryItem3() throws {
         let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
         
-        var options = XCTMeasureOptions()
+        let options = XCTMeasureOptions()
         options.iterationCount = 1000
         
         measure(options: options) {

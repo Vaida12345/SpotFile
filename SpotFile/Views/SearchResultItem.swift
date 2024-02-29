@@ -14,7 +14,7 @@ struct SearchResultItem: View {
     
     let item: any QueryItemProtocol
     
-    let match: AttributedString
+    let match: Text
     
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
     
@@ -46,7 +46,7 @@ struct SearchResultItem: View {
             }
             .frame(width: 20, height: 20)
             
-            Text(match)
+            match
             
             Spacer()
             
@@ -108,7 +108,7 @@ struct SearchResultItem: View {
 }
 
 #Preview {
-    SearchResultItem(index: 0, item: QueryItem.preview, match: AttributedString("here"))
+    SearchResultItem(index: 0, item: QueryItem.preview, match: Text("here"))
         .environment(ModelProvider.preview)
         .frame(width: 200)
 }

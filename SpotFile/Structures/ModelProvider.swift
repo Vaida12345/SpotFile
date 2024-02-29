@@ -32,7 +32,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     var selectionIndex: Int = 0
     
-    var matches: [(Int, any QueryItemProtocol, AttributedString)] = []
+    var matches: [(Int, any QueryItemProtocol, Text)] = []
     
     var isSearching = false
     
@@ -63,10 +63,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 
                 let total = !previousSearchText.isEmpty && canUseLastResult ? self.previous.matches : self.items
                 
-                var matches: [(any QueryItemProtocol, AttributedString)] = if canUseLastResult && !self.previous.childrenMatches.isEmpty {
+                var matches: [(any QueryItemProtocol, Text)] = if canUseLastResult && !self.previous.childrenMatches.isEmpty {
                     []
                 } else {
-                    try await total.stream.compactMap { item in
+                    try total.compactMap { item in
                         try Task.checkCancellation()
                         
                         if let string = item.match(query: self.searchText) {
@@ -74,14 +74,14 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         } else {
                             return nil
                         }
-                    }.sequence
+                    }
                 }
                 try Task.checkCancellation()
                 
                 if matches.isEmpty && self.previous.matches.count == 1 {
                     let total = !self.previous.childrenMatches.isEmpty && canUseLastResult ? self.previous.childrenMatches : self.previous.matches.first!.children
                     
-                    matches = try await total.stream.compactMap { item in
+                    matches = try total.compactMap { item in
                         try Task.checkCancellation()
                         
                         if let string = item.match(query: self.searchText) {
@@ -89,7 +89,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         } else {
                             return nil
                         }
-                    }.sequence
+                    }
                     
                     self.previous.childrenMatches = matches.map { $0.0 as! QueryItemChild }
                 } else {
