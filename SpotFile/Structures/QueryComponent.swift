@@ -10,6 +10,7 @@ import Foundation
 
 enum QueryComponent: Codable {
     
+    /// Spacer should **always** be `Character`
     case spacer(String)
     
     case content(String)

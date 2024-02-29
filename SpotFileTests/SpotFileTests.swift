@@ -11,21 +11,34 @@ import SpotFile
 
 final class SpotFileTests: XCTestCase {
 
-    func testQueryItem() throws {
+    func testQueryItem1() throws {
         let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
         
-        let date = Date()
-        print(item.match(query: "maths readings")?.description ?? "nil")
-        print(date.distanceToNow())
+        measure {
+            _ = item.match(query: "maths readings")
+        }   
+    }
+    
+    func testQueryItem2() throws {
+        let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
         
-//        var attributeContainer = AttributeContainer()
-//        attributeContainer.inlinePresentationIntent = .stronglyEmphasized
-//        
-//        let date = Date()
-//        
-//        var attributed = AttributedString("a1234", attributes: attributeContainer)
-//        print(date.distanceToNow())
-            
+        var options = XCTMeasureOptions()
+        options.iterationCount = 1000
+        
+        measure(options: options) {
+            _ = item.match(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics")
+        }
+    }
+    
+    func testQueryItem3() throws {
+        let item = QueryItem(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematics", item: .desktopDirectory, openableFileRelativePath: "")
+        
+        var options = XCTMeasureOptions()
+        options.iterationCount = 1000
+        
+        measure(options: options) {
+            _ = item.match(query: "Study/Maths/Materials/Readings/Teaching Secondary School Mathematicse")
+        }
     }
 
 }

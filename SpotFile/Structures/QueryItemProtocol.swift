@@ -86,12 +86,12 @@ extension QueryItemProtocol {
         
         while index < self.query.endIndex {
             if (self.query[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) {
-                components.append(.content(cumulative))
+                components.append(.content(cumulative.lowercased()))
                 cumulative = ""
                 continue
             } else if self.query[index].isWhitespace || QueryItem.separators.contains(self.query[index]) {
-                components.append(.content(cumulative))
-                components.append(.spacer("\(self.query[index])"))
+                components.append(.content(cumulative.lowercased()))
+                components.append(.spacer("\(self.query[index].lowercased())"))
                 cumulative = ""
                 self.query.formIndex(after: &index)
                 continue
@@ -102,7 +102,7 @@ extension QueryItemProtocol {
         }
         
         if !cumulative.isEmpty {
-            components.append(.content(cumulative))
+            components.append(.content(cumulative.lowercased()))
         }
         
         return components
@@ -111,29 +111,12 @@ extension QueryItemProtocol {
     
     func match(query: String) -> AttributedString? {
         let queryComponents = self.queryComponents
-        //        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
-        //            guard query.lowercased().hasPrefix(firstComponent.lowercased()) else { return nil }
-        //        }
-        
-        //        var string = AttributedString(self.query)
-        //        if let range = string.range(of: query, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]) {
-        //            string[range].inlinePresentationIntent = .stronglyEmphasized
-        //            return string
-        //        }
-        
-        //        if self.mustIncludeFirstKeyword, case let .content(firstComponent) = queryComponents.first {
-        //            // consume the first query component
-        //            query.removeFirst(firstComponent.count)
-        //            var attributed = AttributedString(firstComponent)
-        //            attributed.inlinePresentationIntent = .stronglyEmphasized
-        //            queryComponents.removeFirst()
-        //            resultingString.append(attributed)
-        //        }
+        let query = Array(query.lowercased()) // use array, as array is `RandomAccessCollection`.
         
         return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
     }
     
-    private func __recursiveMatch(_query: Substring, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {        
+    private func __recursiveMatch(_query: ArraySlice<Character>, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> AttributedString? {
         guard !_query.isEmpty else {
             return AttributedString(components.map(\.value).joined(separator: "")) // end, returning trailing components
         }
@@ -145,16 +128,14 @@ extension QueryItemProtocol {
         
         switch component {
         case .spacer(let spacer):
+            var shouldEmphasize = false
+            if spacer.first == query.first {
+                query.removeFirst()
+                shouldEmphasize = true
+            }
+            
             return __recursiveMatch(_query: query, components: components.dropFirst()).map {
-                var attributed: AttributedString
-                if spacer.lowercased() == query.first?.lowercased() {
-                    query.removeFirst()
-                    attributed = AttributedString(String(spacer), attributes: emphasizedAttributeContainer)
-                } else {
-                    attributed = AttributedString(String(spacer))
-                }
-                
-                return attributed + $0
+                return AttributedString(spacer, attributes: shouldEmphasize ? emphasizedAttributeContainer : .init()) + $0
             }
             
         case .content(let content):
@@ -177,11 +158,13 @@ extension QueryItemProtocol {
                 return nil
             }
             
-            var contentIterator = content.makeIterator()
             var cumulative = ""
-            var remaining = ""
-            while let c = contentIterator.next() {
-                if c.lowercased() == query.first?.lowercased() {
+            var remaining = Substring()
+            
+            var index = content.startIndex
+            while index < content.endIndex {
+                let c = content[index]
+                if c == query.first {
                     query.removeFirst()
                     cumulative.append(c)
                 } else {
@@ -192,10 +175,11 @@ extension QueryItemProtocol {
                         // does not match at all
                         return __recursiveMatch(_query: query, components: components.dropFirst()).map { AttributedString(content) + $0 }
                     }
-                    remaining.append(c)
-                    while let next = contentIterator.next() { remaining.append(next) }
+                    remaining = content[index...]
                     break
                 }
+                
+                content.formIndex(after: &index)
             }
             
             
@@ -204,7 +188,7 @@ extension QueryItemProtocol {
                 return attributed + match
             } else if isFirst && self.mustIncludeFirstKeyword {
                 return nil
-            } else if let match = __recursiveMatch(_query: _query, components: components.dropFirst()) {
+            } else if let match = __recursiveMatch(_query: _query, components: components.dropFirst()) { // unconsumed, original query
                 let attributed = AttributedString(content)
                 return attributed + match
             } else {
