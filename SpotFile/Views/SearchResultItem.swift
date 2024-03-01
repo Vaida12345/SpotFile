@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Stratum
+import ViewCollection
 
 struct SearchResultItem: View {
     
@@ -21,10 +22,20 @@ struct SearchResultItem: View {
     
     @State private var hovering = false
     
+    @State private var showPopover = false
+    
+    @State private var updatePopoverTask: Task<Void, any Error> = Task { }
+    
+    
     var help: String {
         if !item.openableFileRelativePath.isEmpty,
             let name = item.openableFileRelativePath.components(separatedBy: "/").last {
-            return name
+            let relativePath = item.openableFileRelativePath
+            if name == relativePath {
+                return name
+            } else {
+                return name + "\n" + item.openableFileRelativePath
+            }
         } else {
             return item.openableFileRelativePath
         }
@@ -65,6 +76,52 @@ struct SearchResultItem: View {
             }
         }
         .help(help)
+        .popover(isPresented: $showPopover) {
+            let text: (Text, Bool) = {
+                if !item.openableFileRelativePath.isEmpty,
+                   let name = item.openableFileRelativePath.components(separatedBy: "/").last {
+                    let relativePath = item.openableFileRelativePath
+                    if name == relativePath {
+                        return (Text(name), false)
+                    } else {
+                        return (Text(name).fontWeight(.semibold) + Text("\n" + item.openableFileRelativePath), true)
+                    }
+                } else {
+                    return (Text(item.openableFileRelativePath), false)
+                }
+            }()
+            
+            HStack {
+                AsyncView {
+                    try await item.item.appending(path: item.openableFileRelativePath).preview(size: .square(32))
+                } content: { image in
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                }
+                .frame(width: text.1 ? 30 : 20, height: text.1 ? 30 : 20)
+                
+                text.0
+                    .foregroundStyle(.black)
+                    .padding(.leading, 5)
+            }
+            .padding(.all, 10)
+        }
+        .onChange(of: index == modelProvider.selectionIndex) { oldValue, newValue in
+            if newValue {
+                updatePopoverTask = Task {
+                    guard item is QueryItemChild else { return }
+                    try await Task.sleep(for: .seconds(0.5))
+                    
+                    Task { @MainActor in
+                        showPopover = true
+                    }
+                }
+            } else {
+                updatePopoverTask.cancel()
+                showPopover = false
+            }
+        }
         .foregroundStyle(index == modelProvider.selectionIndex ? .white : .primary)
         .padding(.vertical, 5)
         .padding(.leading, 7)
