@@ -1,0 +1,142 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "\n" : {
+
+    },
+    " ," : {
+
+    },
+    " Q" : {
+
+    },
+    " R" : {
+
+    },
+    "%lld more items" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld more items"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "An optional name of SF Symbol to be used as icon" : {
+
+    },
+    "Browse..." : {
+
+    },
+    "Close Window" : {
+
+    },
+    "Copy" : {
+
+    },
+    "Copy as pathname" : {
+
+    },
+    "Define what kind of files should be included in search results." : {
+
+    },
+    "Enable deep search" : {
+
+    },
+    "Enable enumeration" : {
+
+    },
+    "Files" : {
+
+    },
+    "Folders" : {
+
+    },
+    "here" : {
+
+    },
+    "If enabled, contents of subfolders, and so on will be included. Note that large folders will cause the app laggy." : {
+
+    },
+    "Loading..." : {
+
+    },
+    "Location" : {
+
+    },
+    "Must include first keyword" : {
+
+    },
+    "New" : {
+
+    },
+    "No result found" : {
+
+    },
+    "Open" : {
+
+    },
+    "Override Icon" : {
+
+    },
+    "Please use the *update* button to notify the app of any changes, or the *Sync* button in menu bar." : {
+
+    },
+    "Quit SpotFile" : {
+
+    },
+    "Relative Path" : {
+
+    },
+    "Save" : {
+
+    },
+    "Searches For" : {
+
+    },
+    "Select an item on the left\nOr add a new item." : {
+
+    },
+    "Settings" : {
+
+    },
+    "Settings..." : {
+
+    },
+    "Show in Enclosing Folder" : {
+
+    },
+    "Sync" : {
+
+    },
+    "The executable's relative path to the *location* above" : {
+
+    },
+    "Update" : {
+
+    },
+    "When conducting searches, the leading keyword *%@* must be included to find this item." : {
+
+    },
+    "When enabled, you can also search for contents of the folder by typing its name" : {
+
+    }
+  },
+  "version" : "1.0"
+}

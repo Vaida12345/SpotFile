@@ -26,14 +26,20 @@ struct SearchResultView: View {
             .padding()
             .frame(maxWidth: .infinity)
         } else {
-            ScrollView(.vertical) {
-                VStack(spacing: 4) {
-                    ForEach(modelProvider.matches, id: \.1.id) { (index, item, match) in
-                        SearchResultItem(index: index, item: item, match: match)
-                    }
+            VStack(spacing: 4) {
+                ForEach(modelProvider.matches.prefix(25), id: \.1.id) { (index, item, match) in
+                    SearchResultItem(index: index, item: item, match: match)
                 }
-                .padding(.vertical, 2.5)
+                
+                if modelProvider.matches.count > 25 {
+                    Group {
+                        Divider()
+                        Text("\(modelProvider.matches.count - 25) more items")
+                    }
+                    .background(.thickMaterial)
+                }
             }
+            .padding(.vertical, 2.5)
         }
     }
 }

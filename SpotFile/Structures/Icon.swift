@@ -10,6 +10,7 @@ import Stratum
 
 
 /// An icon, remember to resize the icon to 32 x 32
+@Observable
 final class Icon: Codable {
     
     var image: NativeImage? {
@@ -21,6 +22,7 @@ final class Icon: Codable {
         }
     }
     
+    @ObservationIgnored
     var isUpdated: Bool = false
     
     let id: UUID

@@ -19,6 +19,8 @@ struct SearchResultItem: View {
     
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     
     @State private var hovering = false
     
@@ -82,12 +84,12 @@ struct SearchResultItem: View {
                    let name = item.openableFileRelativePath.components(separatedBy: "/").last {
                     let relativePath = item.openableFileRelativePath
                     if name == relativePath {
-                        return (Text(name), false)
+                        return (match, false)
                     } else {
-                        return (Text(name).fontWeight(.semibold) + Text("\n" + item.openableFileRelativePath), true)
+                        return (Text(name).fontWeight(.semibold) + Text("\n") + match, true)
                     }
                 } else {
-                    return (Text(item.openableFileRelativePath), false)
+                    return (match, false)
                 }
             }()
             
@@ -102,7 +104,7 @@ struct SearchResultItem: View {
                 .frame(width: text.1 ? 30 : 20, height: text.1 ? 30 : 20)
                 
                 text.0
-                    .foregroundStyle(.black)
+                    .foregroundStyle(colorScheme == .dark ? .white : .black)
                     .padding(.leading, 5)
             }
             .padding(.all, 10)

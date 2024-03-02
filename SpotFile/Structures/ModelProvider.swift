@@ -79,15 +79,29 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 try Task.checkCancellation()
                 
                 if matches.isEmpty && self.previous.matches.count == 1 {
-                    let total = !self.previous.childrenMatches.isEmpty && canUseLastResult ? self.previous.childrenMatches : self.previous.matches.first!.children
-                    
-                    matches = try total.compactMap { item in
-                        try Task.checkCancellation()
+                    if !self.previous.childrenMatches.isEmpty && canUseLastResult {
+                        matches = try self.previous.childrenMatches.compactMap { item in
+                            try Task.checkCancellation()
+                            
+                            if let string = item.match(query: self.searchText) {
+                                return (item, string)
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        let total = self.previous.matches.first!.children
+                        var matchedPrefix = ""
                         
-                        if let string = item.match(query: self.searchText) {
-                            return (item, string)
-                        } else {
-                            return nil
+                        for item in total {
+                            try Task.checkCancellation()
+                            
+                            if !matchedPrefix.isEmpty && item.query.hasPrefix(matchedPrefix) {
+                                continue // must be in its subfolder, ignore
+                            } else if let string = item.match(query: self.searchText) {
+                                matches.append((item, string))
+                                matchedPrefix = item.query
+                            }
                         }
                     }
                     

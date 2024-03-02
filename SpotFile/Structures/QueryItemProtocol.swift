@@ -29,7 +29,7 @@ protocol QueryItemProtocol: AnyObject {
     var openedRecords: [String: Int] { get set }
     
     
-    /// the returned components are lowercased.
+    /// the returned components are NOT lowercased
     var queryComponents: [QueryComponent] { get }
     
 }
@@ -86,12 +86,12 @@ extension QueryItemProtocol {
         
         while index < self.query.endIndex {
             if (self.query[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) {
-                components.append(.content(cumulative.lowercased()))
+                components.append(.content(cumulative))
                 cumulative = ""
                 continue
             } else if self.query[index].isWhitespace || QueryItem.separators.contains(self.query[index]) {
-                components.append(.content(cumulative.lowercased()))
-                components.append(.spacer("\(self.query[index].lowercased())"))
+                components.append(.content(cumulative))
+                components.append(.spacer("\(self.query[index])"))
                 cumulative = ""
                 self.query.formIndex(after: &index)
                 continue
@@ -102,7 +102,7 @@ extension QueryItemProtocol {
         }
         
         if !cumulative.isEmpty {
-            components.append(.content(cumulative.lowercased()))
+            components.append(.content(cumulative))
         }
         
         return components
@@ -164,7 +164,7 @@ extension QueryItemProtocol {
             var index = content.startIndex
             while index < content.endIndex {
                 let c = content[index]
-                if c == query.first {
+                if c.lowercased().first == query.first {
                     query.removeFirst()
                     cumulative.append(c)
                 } else {
