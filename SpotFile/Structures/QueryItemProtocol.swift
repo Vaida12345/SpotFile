@@ -26,11 +26,11 @@ protocol QueryItemProtocol: AnyObject {
     
     var iconSystemName: String { get }
     
-    var openedRecords: [String: Int] { get set }
-    
     
     /// the returned components are NOT lowercased
     var queryComponents: [QueryComponent] { get }
+    
+    func updateRecords(_ query: String)
     
 }
 
@@ -201,13 +201,9 @@ extension QueryItemProtocol {
     // MARK: - File Operations
     
     func reveal(query: String) {
-        self.openedRecords[query, default: 0] += 1
+        updateRecords(query)
         withErrorPresented {
-            let path = if self is QueryItem {
-                self.item
-            } else {
-                self.item.appending(path: openableFileRelativePath)
-            }
+            let path = item
             try path.reveal()
             Task { @MainActor in
                 NSApp.hide(nil)
@@ -221,12 +217,16 @@ extension QueryItemProtocol {
     }
     
     func open(query: String) {
-        self.openedRecords[query, default: 0] += 1
+        updateRecords(query)
         let item = self.item
         let openableFileRelativePath = self.openableFileRelativePath
         Task {
             await withErrorPresented {
-                let path = item.appending(path: openableFileRelativePath)
+                let path = if self is QueryItem {
+                    item.appending(path: openableFileRelativePath)
+                } else {
+                    item
+                }
                 try await path.open()
                 Task { @MainActor in
                     NSApp.hide(nil)

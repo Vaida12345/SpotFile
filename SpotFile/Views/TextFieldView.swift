@@ -33,8 +33,16 @@ struct SuggestionTextField: NSViewRepresentable {
     }
     
     func updateNSView(_ searchField: NSSearchField, context: Context) {
-        if searchField.stringValue != modelProvider.searchText {
-            searchField.stringValue = modelProvider.searchText
+        if let prefix = modelProvider.previous.parentQuery,
+            modelProvider.searchText.hasPrefix(prefix) {
+            let pendingUpdate = String(modelProvider.searchText.dropFirst(prefix.count))
+            if searchField.stringValue != pendingUpdate {
+                searchField.stringValue = pendingUpdate
+            }
+        } else {
+            if searchField.stringValue != modelProvider.searchText {
+                searchField.stringValue = modelProvider.searchText
+            }
         }
     }
     
@@ -64,33 +72,34 @@ struct SuggestionTextField: NSViewRepresentable {
             if commandSelector == #selector(NSResponder.moveUp(_:)) {
                 if modelProvider.selectionIndex > 0 {
                     modelProvider.selectionIndex -= 1
+                    if modelProvider.selectionIndex - modelProvider.shownStartIndex < 0 {
+                        modelProvider.shownStartIndex -= 1
+                    }
                     return true
                 }
                 return false
-            }
-            
-            if commandSelector == #selector(NSResponder.moveDown(_:)) {
+            } else if commandSelector == #selector(NSResponder.moveDown(_:)) {
                 if modelProvider.selectionIndex < modelProvider.matches.count - 1 {
                     modelProvider.selectionIndex += 1
+                    if modelProvider.selectionIndex - modelProvider.shownStartIndex >= 25 {
+                        modelProvider.shownStartIndex += 1
+                    }
+                    
                     return true
                 }
                 return false
-            }
-            
-            if commandSelector == #selector(NSResponder.complete(_:)) ||
+            } else if commandSelector == #selector(NSResponder.complete(_:)) ||
                 commandSelector == #selector(NSResponder.cancelOperation(_:)) {
                 modelProvider.searchText = ""
                 
                 return true
-            }
-            
-            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+            } else if commandSelector == #selector(NSResponder.insertNewline(_:)) {
                 modelProvider.submitItem()
                 
                 return true
+            } else {
+                return false
             }
-            
-            return false
         }
     }
 }

@@ -25,34 +25,6 @@ struct ContentView: View {
                 .autocorrectionDisabled()
             
             if modelProvider.searchText.isEmpty {
-                if modelProvider.items.contains(where: { $0.childOptions.isEnabled }) {
-                    MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" R")) {
-                        isSyncing = true
-                        Task.detached {
-                            for item in await modelProvider.items {
-                                try await item.updateChildren()
-                            }
-                            try await modelProvider.save()
-                            Task { @MainActor in
-                                isSyncing = false
-                            }
-                        }
-                    } label: {
-                        HStack {
-                            Text("Sync")
-                            
-                            if isSyncing {
-                                ProgressView()
-                                    .scaleEffect(0.5)
-                                    .frame(width: 10, height: 10)
-                            }
-                            
-                            Spacer()
-                        }
-                    }
-                    .keyboardShortcut(.init("r"), modifiers: .command)
-                }
-                
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" ,")) {
                     NSApp.setActivationPolicy(.regular)
                     openWindow(id: "configuration")

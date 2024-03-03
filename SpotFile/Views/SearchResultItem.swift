@@ -29,17 +29,24 @@ struct SearchResultItem: View {
     @State private var updatePopoverTask: Task<Void, any Error> = Task { }
     
     
-    var help: String {
+    @ViewBuilder
+    var help: some View {
         if !item.openableFileRelativePath.isEmpty,
-            let name = item.openableFileRelativePath.components(separatedBy: "/").last {
-            let relativePath = item.openableFileRelativePath
-            if name == relativePath {
-                return name
+           let name = item.openableFileRelativePath.components(separatedBy: "/").last,
+           let _item = modelProvider.previous.matches.first,
+           let relative = item.item.relativePath(to: _item.item) {
+            let folder = relative.dropLast(name.count + 1)
+            if folder.isEmpty {
+                Text(name)
             } else {
-                return name + "\n" + item.openableFileRelativePath
+                VStack(alignment: .leading) {
+                    Text(name)
+                        .fontWeight(.semibold)
+                    Text(folder)
+                }
             }
         } else {
-            return item.openableFileRelativePath
+            Text(item.openableFileRelativePath)
         }
     }
     
@@ -49,8 +56,16 @@ struct SearchResultItem: View {
             Group {
                 if let item = item as? QueryItem {
                     item.smallIconView(isSelected: index == modelProvider.selectionIndex)
-                } else if index == 0, let item = item as? QueryItemChild {
-                    item.smallIconView(isSelected: index == modelProvider.selectionIndex)
+                } else if let item = item as? QueryItemChild {
+                    AsyncView {
+                        try await item.item.preview(size: .square(20))
+                    } content: { value in
+                        Image(nativeImage: value)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 20, height: 20)
+                    }
+
                 } else {
                     Rectangle()
                         .fill(.clear)
@@ -59,7 +74,12 @@ struct SearchResultItem: View {
             }
             .frame(width: 20, height: 20)
             
-            match
+            if index == modelProvider.selectionIndex && item is QueryItemChild {
+                help
+            } else {
+                match
+                    .lineLimit(1)
+            }
             
             Spacer()
             
@@ -76,38 +96,6 @@ struct SearchResultItem: View {
                 .opacity(hovering ? 0.8 : 0)
                 .keyboardShortcut(.return, modifiers: .command)
             }
-        }
-        .help(help)
-        .popover(isPresented: $showPopover) {
-            let text: (Text, Bool) = {
-                if !item.openableFileRelativePath.isEmpty,
-                   let name = item.openableFileRelativePath.components(separatedBy: "/").last {
-                    let relativePath = item.openableFileRelativePath
-                    if name == relativePath {
-                        return (match, false)
-                    } else {
-                        return (Text(name).fontWeight(.semibold) + Text("\n") + match, true)
-                    }
-                } else {
-                    return (match, false)
-                }
-            }()
-            
-            HStack {
-                AsyncView {
-                    try await item.item.appending(path: item.openableFileRelativePath).preview(size: .square(32))
-                } content: { image in
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                }
-                .frame(width: text.1 ? 30 : 20, height: text.1 ? 30 : 20)
-                
-                text.0
-                    .foregroundStyle(colorScheme == .dark ? .white : .black)
-                    .padding(.leading, 5)
-            }
-            .padding(.all, 10)
         }
         .onChange(of: index == modelProvider.selectionIndex) { oldValue, newValue in
             if newValue {
@@ -128,7 +116,7 @@ struct SearchResultItem: View {
         .padding(.vertical, 5)
         .padding(.leading, 7)
         .frame(maxWidth: .infinity)
-        .frame(height: 25)
+//        .frame(height: 25)
         .background(index == modelProvider.selectionIndex ? Color.accentColor : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .onHover { hovering in

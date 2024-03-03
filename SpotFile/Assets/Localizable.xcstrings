@@ -4,9 +4,6 @@
     "" : {
 
     },
-    "\n" : {
-
-    },
     " ," : {
 
     },
@@ -122,13 +119,7 @@
     "Show in Enclosing Folder" : {
 
     },
-    "Sync" : {
-
-    },
     "The executable's relative path to the *location* above" : {
-
-    },
-    "Update" : {
 
     },
     "When conducting searches, the leading keyword *%@* must be included to find this item." : {

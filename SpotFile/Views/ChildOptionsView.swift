@@ -22,21 +22,6 @@ struct ChildOptionsView: View {
                     HStack {
                         Toggle("Enable deep search", isOn: $options.isEnabled)
                         Spacer()
-                        
-                        if isUpdating {
-                            ProgressView()
-                                .scaleEffect(0.5)
-                                .frame(width: 10, height: 10)
-                        }
-                        Button("Update") {
-                            Task {
-                                isUpdating = true
-                                try await item.updateChildren()
-                                isUpdating = false
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(!options.isEnabled || isUpdating)
                     }
                     Text("When enabled, you can also search for contents of the folder by typing its name")
                         .foregroundStyle(.secondary)

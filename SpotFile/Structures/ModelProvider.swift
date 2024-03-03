@@ -22,7 +22,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }
     
     @ObservationIgnored
-    private var previous = PreviousState()
+    var previous = PreviousState()
     
     var searchText: String = "" {
         didSet {
@@ -31,6 +31,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }
     
     var selectionIndex: Int = 0
+    
+    var shownStartIndex: Int = 0
     
     var matches: [(Int, any QueryItemProtocol, Text)] = []
     
@@ -45,86 +47,136 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             return
         }
         
+        let previous = previous // cross actor.
+        
         isSearching = true
         let searchText = searchText
         let previousSearchText = previous.searchText
-        Task { @MainActor in
-            selectionIndex = 0
-            previous.task?.cancel()
-            
-            previous.task = Task.detached {
-                let date = Date()
-                let canUseLastResult = searchText.hasPrefix(previousSearchText)
-                if searchText.count < previousSearchText.count {
-                    // is deleting, then wait for a sec before conducting any search
-                    try await Task.sleep(for: .milliseconds(50))
-                }
-                try Task.checkCancellation()
+        self.selectionIndex = 0
+        
+        let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
+        previous.task?.cancel()
+        
+        previous.task = Task.detached {
+            let date = Date()
+            print("updateSearches(\(searchText)) enter @\(Date().timeIntervalSinceReferenceDate)")
+            defer {
+                print("updateSearches(\(searchText)) exit @\(Date().timeIntervalSinceReferenceDate)\n")
+            }
+            func onComplete() {
+                print("updateSearches(\(searchText)) took: \(date.distanceToNow())")
+                previous.searchText = searchText
+                previous.task = nil
                 
-                let total = !previousSearchText.isEmpty && canUseLastResult ? self.previous.matches : self.items
-                
-                var matches: [(any QueryItemProtocol, Text)] = if canUseLastResult && !self.previous.childrenMatches.isEmpty {
-                    []
-                } else {
-                    try total.compactMap { item in
-                        try Task.checkCancellation()
-                        
-                        if let string = item.match(query: self.searchText) {
-                            return (item, string)
-                        } else {
-                            return nil
-                        }
-                    }
-                }
-                try Task.checkCancellation()
-                
-                if matches.isEmpty && self.previous.matches.count == 1 {
-                    if !self.previous.childrenMatches.isEmpty && canUseLastResult {
-                        matches = try self.previous.childrenMatches.compactMap { item in
-                            try Task.checkCancellation()
-                            
-                            if let string = item.match(query: self.searchText) {
-                                return (item, string)
-                            } else {
-                                return nil
-                            }
-                        }
-                    } else {
-                        let total = self.previous.matches.first!.children
-                        var matchedPrefix = ""
-                        
-                        for item in total {
-                            try Task.checkCancellation()
-                            
-                            if !matchedPrefix.isEmpty && item.query.hasPrefix(matchedPrefix) {
-                                continue // must be in its subfolder, ignore
-                            } else if let string = item.match(query: self.searchText) {
-                                matches.append((item, string))
-                                matchedPrefix = item.query
-                            }
-                        }
-                    }
-                    
-                    self.previous.childrenMatches = matches.map { $0.0 as! QueryItemChild }
-                } else {
-                    self.previous.matches = matches.map { $0.0 as! QueryItem }
-                    self.previous.childrenMatches = []
-                }
-                
-                let _matches = matches.sorted(on: {
-                    ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.count)
-                }, by: >).enumerated().map { ($0.0, $0.1.0, $0.1.1) }
-                
-                try Task.checkCancellation()
-                
-                print("conducting search took \(date.distanceToNow())")
                 Task { @MainActor in
-                    self.matches = _matches
-                    self.previous.searchText = searchText
-                    self.previous.task = nil
                     self.isSearching = false
                 }
             }
+            
+            if searchText.count < previousSearchText.count {
+                // is deleting, then wait for a sec before conducting any search
+                try await Task.sleep(for: .milliseconds(50))
+            }
+            try Task.checkCancellation()
+            
+            let total = !previousSearchText.isEmpty && canUseLastResult ? previous.matches : self.items
+            
+            let itemsMatches: [(QueryItem, Text)] = if previous.parentQuery != nil {
+                []
+            } else {
+                try await total.stream.compactMap { item in
+                    try Task.checkCancellation()
+                    
+                    if let string = item.match(query: self.searchText) {
+                        return (item, string)
+                    } else {
+                        return nil
+                    }
+                }.sequence.sorted(on: {
+                    ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.count)
+                }, by: >)
+            }
+            
+            Task { @MainActor in
+                self.matches = itemsMatches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+            }
+            try Task.checkCancellation()
+            
+            var _matches: [(any QueryItemProtocol, Text)] = []
+            
+            guard itemsMatches.isEmpty && previous.matches.count == 1 else {
+                previous.matches = itemsMatches.map(\.0)
+                previous.childrenMatches = []
+                previous.parentQuery = nil
+                onComplete()
+                return
+            }
+            
+            var isInitial: Bool = false
+            if previous.parentQuery == nil {
+                isInitial = true
+                previous.parentQuery = previous.searchText
+            }
+            let searchText = if isInitial {
+                String(self.searchText.dropFirst(previous.searchText.count))
+            } else {
+                self.searchText
+            }
+            
+            if !previous.childrenMatches.isEmpty && canUseLastResult {
+                print("can use last result")
+                _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, Text)].self) { group in
+                    for child in previous.childrenMatches {
+                        guard group.addTaskUnlessCancelled(operation: {
+                            try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText)
+                        }) else { return [] }
+                    }
+                    
+                    return try await group.allObjects().flatten()
+                }
+            } else {
+                // cannot use last result
+                print("cannot use last result, using search text \"\(searchText)\"")
+                _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
+            }
+            
+            previous.childrenMatches = _matches.map(\.0)
+            
+            let __matches = _matches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+            Task { @MainActor in
+                self.matches = __matches
+            }
+            onComplete()
+        }
+    }
+    
+    private func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, Text)] {
+        try Task.checkCancellation()
+        // if `item` matches
+        if let match = item.match(query: searchText) {
+            if !searchText.allSatisfy({ $0.isWhitespace || QueryItem.separators.contains($0) }) {
+                return [(item, match)]
+            } else {
+                return try await item.item.children(range: .contentsOfDirectory).compactMap { child in
+                    guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { return nil }
+                    let queryChild = QueryItemChild(parent: item, filename: child.name)
+                    return (queryChild, Text(child.name))
+                }.allObjects()
+            }
+        }
+        
+        try Task.checkCancellation()
+        
+        return try await withThrowingTaskGroup(of: [(any QueryItemProtocol, Text)].self) { group in
+            for await child in try item.item.children(range: .contentsOfDirectory) {
+                guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { continue }
+                guard group.addTaskUnlessCancelled(operation: {
+                    let queryChild = QueryItemChild(parent: item, filename: child.name)
+                    return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText)
+                }) else { return [] }
+            }
+            
+            return try await group.allObjects().flatten()
         }
     }
     
@@ -144,21 +196,25 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }
     
     
-    struct PreviousState {
+    final class PreviousState {
         
         var searchText: String = ""
         
         var matches: [QueryItem] = []
         
-        var childrenMatches: [QueryItemChild] = []
+        var parentQuery: String? = nil
+        
+        var childrenMatches: [any QueryItemProtocol] = []
         
         var task: Task<Void, any Error>?
         
-        mutating func reset() {
+        func reset() {
             self.searchText = ""
             self.matches = []
             self.childrenMatches = []
+            self.task?.cancel()
             self.task = nil
+            self.parentQuery = nil
         }
         
     }

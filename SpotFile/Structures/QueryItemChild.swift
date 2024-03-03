@@ -13,15 +13,19 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
     
     let id = UUID()
     
-    unowned var parent: QueryItem!
+    let parent: (any QueryItemProtocol)! // no need unown, wont be circular anyway
     
     
     var query: String {
-        self.parent.query + "/" + self.openableFileRelativePath
+        if let parent = parent as? QueryItem {
+            self.openableFileRelativePath
+        } else {
+            self.parent.query + "/" + self.openableFileRelativePath
+        }
     }
     
     var item: FinderItem {
-        self.parent.item
+        self.parent.item.appending(path: openableFileRelativePath)
     }
     
     let openableFileRelativePath: String
@@ -38,32 +42,23 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
         self.parent.iconSystemName
     }
     
-    var openedRecords: [String : Int]
-    
     lazy var queryComponents: [QueryComponent] = self.updateQueryComponents()
     
+    func updateRecords(_ query: String) { }
     
-    init(parent: QueryItem, openableFileRelativePath: String, openedRecords: [String : Int]) {
+    
+    init(parent: any QueryItemProtocol, filename: String) {
         self.parent = parent
-        self.openableFileRelativePath = openableFileRelativePath
-        self.openedRecords = openedRecords
+        self.openableFileRelativePath = filename
     }
-    
-    enum CodingKeys: CodingKey {
-        case openableFileRelativePath
-        case openedRecords
-    }
-    
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.openableFileRelativePath, forKey: .openableFileRelativePath)
-        try container.encode(self.openedRecords, forKey: .openedRecords)
+        var container = encoder.singleValueContainer()
+        try container.encode(self.openableFileRelativePath)
     }
     
     init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.openableFileRelativePath = try container.decode(String.self, forKey: .openableFileRelativePath)
-        self.openedRecords = try container.decode([String : Int].self, forKey: .openedRecords)
+        let container = try decoder.singleValueContainer()
+        self.openableFileRelativePath = try container.decode(String.self)
         self.parent = nil
     }
     

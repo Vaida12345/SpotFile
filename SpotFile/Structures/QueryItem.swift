@@ -47,9 +47,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     @ObservationIgnored
     var queryComponents: [QueryComponent] = []
     
-    @ObservationIgnored
-    var children: [QueryItemChild] = []
-    
     var childOptions: ChildOptions = .init()
     
     
@@ -58,22 +55,16 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         self.icon.image = icon
     }
     
-    func updateChildren() async throws {
-        var children: [FinderItem] = []
-        for await child in try item.children(range: childOptions.enumeration ? .enumeration : .contentsOfDirectory) {
-            guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { continue }
-            children.append(child)
-        }
-        
-        self.children = children.map { QueryItemChild(parent: self, openableFileRelativePath: $0.relativePath(to: item) ?? "", openedRecords: [:]) }
-    }
-    
     func delete() throws {
         try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(self.icon.id).heic").removeIfExists()
         try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: self.id.description).removeIfExists()
         
         self.isItemUpdated = true // set to true is case undo
         self.icon.isUpdated = true
+    }
+    
+    func updateRecords(_ query: String) {
+        self.openedRecords[query, default: 0] += 1
     }
     
     
@@ -147,7 +138,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
         try container.encode(self.openedRecords, forKey: ._openedRecords)
         try container.encode(self._mustIncludeFirstKeyword, forKey: ._mustIncludeFirstKeyword)
-        try container.encode(self.children, forKey: ._children)
         try container.encode(self._childOptions, forKey: ._childOptions)
     }
     
@@ -173,10 +163,5 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         self._mustIncludeFirstKeyword = try container.decode(Bool.self, forKey: ._mustIncludeFirstKeyword)
         self.childOptions = try container.decode(ChildOptions.self, forKey: ._childOptions)
         self.queryComponents = updateQueryComponents()
-        
-        self.children = try container.decode([QueryItemChild].self, forKey: ._children)
-        for index in 0..<self.children.count {
-            self.children[index].parent = self
-        }
     }
 }

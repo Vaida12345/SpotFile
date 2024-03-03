@@ -12,22 +12,43 @@ struct SearchResultView: View {
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
     
     var body: some View {
-        if modelProvider.matches.isEmpty {
-            Group {
-                if modelProvider.isSearching {
-                    Text("Loading...")
-                } else {
-                    Text("No result found")
+        VStack(spacing: 4) {
+            if modelProvider.previous.parentQuery != nil {
+                if let item = modelProvider.previous.matches.first {
+                    HStack {
+                        item.smallIconView(isSelected: false)
+                            .frame(width: 20, height: 20)
+                        Text(item.query)
+                            .bold()
+                        Spacer()
+                    }
+                    .padding(.leading, 7.5)
                 }
+                
+                Divider()
             }
-            .bold()
-            .foregroundStyle(.secondary)
-            .fontDesign(.rounded)
-            .padding()
-            .frame(maxWidth: .infinity)
-        } else {
-            VStack(spacing: 4) {
-                ForEach(modelProvider.matches.prefix(25), id: \.1.id) { (index, item, match) in
+            
+            if modelProvider.matches.isEmpty {
+                Group {
+                    if modelProvider.isSearching {
+                        Text("Loading...")
+                    } else {
+                        Text("No result found")
+                    }
+                }
+                .bold()
+                .foregroundStyle(.secondary)
+                .fontDesign(.rounded)
+                .padding()
+                .frame(maxWidth: .infinity)
+            } else {
+                let values = if modelProvider.shownStartIndex == 0 {
+                    modelProvider.matches.prefix(25)
+                } else {
+                    modelProvider.matches.dropFirst(max(0, min(modelProvider.matches.count - 25, modelProvider.shownStartIndex))).prefix(25)
+                }
+                
+                ForEach(values, id: \.1.id) { (index, item, match) in
                     SearchResultItem(index: index, item: item, match: match)
                 }
                 
@@ -38,9 +59,10 @@ struct SearchResultView: View {
                     }
                     .background(.thickMaterial)
                 }
+                
             }
-            .padding(.vertical, 2.5)
         }
+        .padding(.vertical, 2.5)
     }
 }
 

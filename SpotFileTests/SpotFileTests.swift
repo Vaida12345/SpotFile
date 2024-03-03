@@ -8,6 +8,7 @@
 import XCTest
 @testable
 import SpotFile
+import Stratum
 
 final class SpotFileTests: XCTestCase {
 
