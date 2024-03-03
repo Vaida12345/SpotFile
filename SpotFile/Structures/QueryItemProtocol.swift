@@ -205,14 +205,7 @@ extension QueryItemProtocol {
         withErrorPresented {
             let path = item
             try path.reveal()
-            Task { @MainActor in
-                NSApp.hide(nil)
-                ModelProvider.instance.searchText = ""
-            }
-            
-            Task.detached {
-                try ModelProvider.instance.save()
-            }
+            postSubmitAction()
         }
     }
     
@@ -228,14 +221,7 @@ extension QueryItemProtocol {
                     item
                 }
                 try await path.open()
-                Task { @MainActor in
-                    NSApp.hide(nil)
-                    ModelProvider.instance.searchText = ""
-                }
-                
-                Task.detached {
-                    try ModelProvider.instance.save()
-                }
+                postSubmitAction()
             }
         }
     }
@@ -247,3 +233,14 @@ private let emphasizedAttributeContainer = {
     container.inlinePresentationIntent = .stronglyEmphasized
     return container
 }()
+
+func postSubmitAction() {
+    Task { @MainActor in
+        NSApp.hide(nil)
+        ModelProvider.instance.searchText = ""
+    }
+    
+    Task.detached {
+        try ModelProvider.instance.save()
+    }
+}

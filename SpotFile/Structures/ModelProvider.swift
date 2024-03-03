@@ -183,7 +183,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     func submitItem() {
         guard searchText != "NSHomeDirectory()" else {
-            try? FinderItem.homeDirectory.reveal()
+            Task {
+                try? await FinderItem.homeDirectory.open()
+                postSubmitAction()
+            }
             return
         }
         guard selectionIndex < self.matches.count else { return }
