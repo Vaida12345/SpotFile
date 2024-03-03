@@ -116,7 +116,7 @@ struct SearchResultItem: View {
         .padding(.vertical, 5)
         .padding(.leading, 7)
         .frame(maxWidth: .infinity)
-//        .frame(height: 25)
+        .frame(height: index == modelProvider.selectionIndex && item is QueryItemChild ? nil : 25)
         .background(index == modelProvider.selectionIndex ? Color.accentColor : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .onHover { hovering in
