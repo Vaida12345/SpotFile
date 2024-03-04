@@ -39,10 +39,15 @@ struct SearchResultItem: View {
             if folder.isEmpty {
                 Text(name)
             } else {
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(name)
                         .fontWeight(.semibold)
+                        .fontWeight(.medium)
                     Text(folder)
+                        .lineSpacing(0)
+                        .font(.callout)
+                        .opacity(0.9)
+                        .fontWeight(.light)
                 }
             }
         } else {
@@ -80,7 +85,10 @@ struct SearchResultItem: View {
                         Text(item.query.content)
                             .fontWeight(.medium)
                         (Text("aka: ").foregroundStyle(.secondary) + match.text)
+                            .lineSpacing(-10)
                             .font(.callout)
+                            .opacity(0.9)
+                            .fontWeight(.light)
                     }
                 }
             }

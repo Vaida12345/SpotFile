@@ -22,6 +22,8 @@ struct SettingsSelectionView: View {
     
     @Environment(\.undoManager) private var undoManager
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     
     var body: some View {
         let itemIsNew = selection.query.content == "new"
@@ -112,12 +114,7 @@ struct SettingsSelectionView: View {
                     .textFieldStyle(.plain)
                 }
                 .scrollIndicators(.never)
-                .background {
-                    if isDropTargeted {
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.accentColor, lineWidth: 1)
-                    }
-                }
+                .background(.background)
                 .inspector(isPresented: $showInspector) {
                     SettingsSelectionInspector(selection: selection)
                 }
@@ -206,7 +203,9 @@ struct SettingsSelectionView: View {
         
         if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
             self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
-            self.selection.query.content = project.stem
+            if self.selection.query.content == "new" {
+                self.selection.query.content = project.stem
+            }
             
             if shouldReplaceIcon {
                 self.selection.iconSystemName = "xcodeproj.fill"

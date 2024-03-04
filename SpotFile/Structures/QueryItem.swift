@@ -24,7 +24,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     }
     
     @ObservationIgnored
-    var isItemUpdated = false
+    var isItemUpdated = true
     
     var openableFileRelativePath: String
     

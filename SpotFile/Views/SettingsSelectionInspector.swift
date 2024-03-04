@@ -13,6 +13,8 @@ struct SettingsSelectionInspector: View {
     
     @Environment(\.undoManager) private var undoManager
     
+    @FocusState private var focus: UUID?
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
@@ -30,7 +32,9 @@ struct SettingsSelectionInspector: View {
                     Spacer()
                     
                     Button {
-                        selection.append(Query(value: "new"), to: \.additionalQueries, undoManager: undoManager)
+                        let newValue = Query(value: "new")
+                        selection.append(newValue, to: \.additionalQueries, undoManager: undoManager)
+                        focus = newValue.id
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -41,6 +45,13 @@ struct SettingsSelectionInspector: View {
             
             List($selection.additionalQueries) { query in
                 TextField("name", text: query.content)
+                    .padding(.vertical, 2.5)
+                    .onSubmit {
+                        if query.wrappedValue.content.isEmpty {
+                            selection.remove(query.wrappedValue, from: \.additionalQueries, undoManager: undoManager)
+                        }
+                    }
+                    .focused($focus, equals: query.id)
                     .contextMenu {
                         Toggle("Must include first keyword", isOn: query.mustIncludeFirstKeyword)
                         
@@ -50,7 +61,6 @@ struct SettingsSelectionInspector: View {
                             selection.remove(query.wrappedValue, from: \.additionalQueries, undoManager: undoManager)
                         }
                     }
-                    .padding(.vertical, 2.5)
             }
             .scrollIndicators(.never)
             .scrollContentBackground(.hidden)
