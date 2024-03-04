@@ -40,10 +40,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     
     func updateSearches() {
+        print("searching for \"\(searchText)\"")
         guard !searchText.isEmpty else {
+            previous.reset()
             selectionIndex = 0
             matches.removeAll()
-            previous.reset()
             return
         }
         
@@ -152,17 +153,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     private func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
         try Task.checkCancellation()
+        
         // if `item` matches
-        if let match = item.match(query: searchText) {
-            if !searchText.allSatisfy({ $0.isWhitespace || QueryItem.separators.contains($0) }) {
-                return [(item, match)]
-            } else {
-                return try await item.item.children(range: .contentsOfDirectory).compactMap { child in
-                    guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { return nil }
-                    let queryChild = QueryItemChild(parent: item, filename: child.name)
-                    return (queryChild, QueryItem.Match(text: Text(child.name), isPrimary: true))
-                }.allObjects()
-            }
+        if !(item is QueryItem) && childOptions.filterContains(item.item.name),
+           let match = item.match(query: searchText) {
+            return [(item, match)]
         }
         
         try Task.checkCancellation()
@@ -212,10 +207,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         var task: Task<Void, any Error>?
         
         func reset() {
+            self.task?.cancel()
             self.searchText = ""
             self.matches = []
             self.childrenMatches = []
-            self.task?.cancel()
             self.task = nil
             self.parentQuery = nil
         }
@@ -231,7 +226,15 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         do {
             let decoder = PropertyListDecoder()
             let data = try Data(contentsOf: ModelProvider.storageLocation)
-            return try! decoder.decode(ModelProvider.self, from: data)
+            
+            do {
+                return try decoder.decode(ModelProvider.self, from: data)
+            } catch {
+                Task { @MainActor in
+                    AlertManager(error).present()
+                }
+                return ModelProvider()
+            }
         } catch {
             return ModelProvider()
         }

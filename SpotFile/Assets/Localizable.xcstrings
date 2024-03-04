@@ -13,6 +13,9 @@
     " R" : {
 
     },
+    "/.*∖.app/, /.*∖.txt/" : {
+
+    },
     "%lld more items" : {
       "localizations" : {
         "en" : {
@@ -74,13 +77,16 @@
     "Files" : {
 
     },
+    "Filter By" : {
+
+    },
     "Folders" : {
 
     },
     "here" : {
 
     },
-    "If enabled, contents of subfolders, and so on will be included. Note that large folders will cause the app laggy." : {
+    "If enabled, contents of subfolders, and so on will be included." : {
 
     },
     "Loading..." : {
@@ -107,7 +113,16 @@
     "Override Icon" : {
 
     },
+    "Please check your regex expression. The changes where emptied." : {
+
+    },
+    "Please enter filters in Regex, including the slashes" : {
+
+    },
     "Quit SpotFile" : {
+
+    },
+    "Regex Parse Error" : {
 
     },
     "Relative Path" : {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Stratum
 
 struct ChildOptionsView: View {
     
@@ -14,6 +15,8 @@ struct ChildOptionsView: View {
     @Binding var options: QueryItem.ChildOptions
     
     @State private var isUpdating = false
+    
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         if options.isDirectory {
@@ -44,7 +47,38 @@ struct ChildOptionsView: View {
                         
                         Toggle("Enable enumeration", isOn: $options.enumeration)
                         
-                        Text("If enabled, contents of subfolders, and so on will be included. Note that large folders will cause the app laggy.")
+                        Text("If enabled, contents of subfolders, and so on will be included.")
+                            .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
+                        
+                        HStack {
+                            Text("Filter By")
+                            
+                            TextField(#"/.*∖.app/, /.*∖.txt/"#, text: $options.filterBy)
+                                .multilineTextAlignment(.trailing)
+                                .textFieldStyle(.plain)
+                                .padding(.trailing, 5)
+                                .fontDesign(.monospaced)
+                                .onSubmit {
+                                    do {
+                                        try options.updateFilters()
+                                    } catch {
+                                        self.options.filterBy = ""
+                                        AlertManager(title: "Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
+                                    }
+                                }
+                                .focused($isFocused)
+                                .onChange(of: isFocused) {
+                                    do {
+                                        try options.updateFilters()
+                                    } catch {
+                                        self.options.filterBy = ""
+                                        AlertManager(title: "Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
+                                    }
+                                }
+                        }
+                        .padding(.top)
+                        
+                        Text("Please enter filters in Regex, including the slashes")
                             .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
                     }
                     .disabled(!options.isEnabled)
@@ -60,6 +94,6 @@ struct ChildOptionsView: View {
 
 #Preview {
     ChildOptionsView(item: .preview,
-                     options: .constant(.init(isDirectory: true)))
+                     options: .constant(.init(isDirectory: true, isEnabled: true)))
         .padding(.all)
 }
