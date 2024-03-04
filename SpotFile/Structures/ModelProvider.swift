@@ -94,7 +94,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         return nil
                     }
                 }.sequence.sorted(on: {
-                    ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.content.count)
+                    if $0.0.query.content.lowercased() == searchText.lowercased() {
+                        return Int.max
+                    } else {
+                        return ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.content.count)
+                    }
                 }, by: >)
             }
             
@@ -103,14 +107,16 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             }
             try Task.checkCancellation()
             
-            var _matches: [(any QueryItemProtocol, QueryItem.Match)] = []
-            
-            guard itemsMatches.isEmpty && previous.matches.count == 1 else {
+            guard itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())})) else {
+                print("is not deep search, exit with previous match count: \(previous.matches.count)")
                 previous.matches = itemsMatches.map(\.0)
                 previous.childrenMatches = []
                 previous.parentQuery = nil
                 onComplete()
                 return
+            }
+            if previous.matches.count > 1 {
+                previous.matches = [previous.matches.first(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased()) })!]
             }
             
             var isInitial: Bool = false
@@ -124,6 +130,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 self.searchText
             }
             
+            let _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
                 print("can use last result")
                 _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
@@ -160,6 +167,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             return [(item, match)]
         }
         
+        guard !item.item.isPackage else { return [] }
         try Task.checkCancellation()
         
         return try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
