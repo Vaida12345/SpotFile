@@ -14,6 +14,8 @@ struct SettingsSelectionView: View {
     
     @State private var showFilePicker = false
     
+    @AppStorage("SettingsSelectionView.showInspector") private var showInspector = false
+    
     @FocusState private var focusedState: FocusValues?
     
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
@@ -22,17 +24,16 @@ struct SettingsSelectionView: View {
     
     
     var body: some View {
+        let itemIsNew = selection.query.content == "new"
+        
         DropHandlerView()
             .overlay(hidden: false) { isDropTargeted in
                 ScrollView {
                     VStack {
                         HStack {
                             selection.iconView
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 50, height: 50)
                             
-                            TextField("", text: $selection.query)
+                            TextField("", text: $selection.query.content)
                                 .font(.title)
                                 .bold()
                                 .textSelection(.enabled)
@@ -49,8 +50,12 @@ struct SettingsSelectionView: View {
                                 
                                 Spacer()
                                 
-                                TextField("Location", text: Binding<String> {
-                                    selection.item.userFriendlyDescription
+                                TextField("The target location. Note: You can also drop in the file.", text: Binding<String> {
+                                    if itemIsNew {
+                                        ""
+                                    } else {
+                                        selection.item.userFriendlyDescription
+                                    }
                                 } set: {
                                     selection.item = FinderItem(at: $0)
                                 })
@@ -77,34 +82,22 @@ struct SettingsSelectionView: View {
                                     }
                             }
                         }
-                        .padding(.vertical)
+                        .padding(.top)
                         .multilineTextAlignment(.trailing)
                         
                         VStack {
-                            HStack {
-                                Text("Override Icon")
-                                    .fontWeight(.medium)
-                                
-                                Spacer()
-                                
-                                TextField("An optional name of SF Symbol to be used as icon", text: $selection.iconSystemName)
-                                    .focused($focusedState, equals: .overrideIcon)
-                                    .onSubmit {
-                                        focusedState = nil
-                                    }
-                            }
-                            .padding(.bottom)
-                            
-                            GroupBox {
-                                VStack(alignment: .leading) {
-                                    HStack {
-                                        Toggle("Must include first keyword", isOn: $selection.mustIncludeFirstKeyword)
-                                        Spacer()
-                                    }
-                                    if case let .content(content) = selection.queryComponents.first {
-                                        Text("When conducting searches, the leading keyword *\(content)* must be included to find this item.")
-                                            .foregroundStyle(.secondary)
-                                            .multilineTextAlignment(.leading)
+                            if selection.query.components.count > 1 {
+                                GroupBox {
+                                    VStack(alignment: .leading) {
+                                        HStack {
+                                            Toggle("Must include first keyword", isOn: $selection.query.mustIncludeFirstKeyword)
+                                            Spacer()
+                                        }
+                                        if case let .content(content) = selection.query.components.first {
+                                            Text("When conducting searches, the leading keyword *\(content)* must be included (or partially included) to find this item.")
+                                                .foregroundStyle(.secondary)
+                                                .multilineTextAlignment(.leading)
+                                        }
                                     }
                                 }
                             }
@@ -118,10 +111,35 @@ struct SettingsSelectionView: View {
                     .buttonStyle(.plain)
                     .textFieldStyle(.plain)
                 }
+                .scrollIndicators(.never)
                 .background {
                     if isDropTargeted {
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(Color.accentColor, lineWidth: 1)
+                    }
+                }
+                .inspector(isPresented: $showInspector) {
+                    SettingsSelectionInspector(selection: selection)
+                }
+                .overlay {
+                    if isDropTargeted {
+                        VStack {
+                            Image(systemName: "square.and.arrow.down.on.square")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .imageScale(.large)
+                                .frame(width: 100, height: 100)
+                                .bold()
+                                .padding()
+                            
+                            Text("Drop the file here to set its location")
+                                .fontDesign(.rounded)
+                                .bold()
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.all)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(.ultraThinMaterial)
                     }
                 }
             }
@@ -142,8 +160,9 @@ struct SettingsSelectionView: View {
                     AlertManager(error).present()
                 }
             }
+            .fileDialogDefaultDirectory(itemIsNew ? nil : selection.item.url)
             .onAppear {
-                if selection.query == "new" {
+                if itemIsNew {
                     self.focusedState = .title
                 }
             }
@@ -158,6 +177,14 @@ struct SettingsSelectionView: View {
                         .symbolRenderingMode(.multicolor)
                 }
                 .keyboardShortcut(.delete, modifiers: [])
+                .padding(.trailing)
+                
+                Button {
+                    showInspector.toggle()
+                } label: {
+                    Image(systemName: "sidebar.right")
+                }
+                .help("Additional controls")
             }
     }
     
@@ -170,17 +197,16 @@ struct SettingsSelectionView: View {
     func add(item: FinderItem) async {
         self.selection.item = item
         self.selection.childOptions.isDirectory = item.isDirectory && !item.isPackage
-        try? await self.selection.updateIcon()
         
-        if self.selection.query == "new" {
-            self.selection.query = item.stem
+        if self.selection.query.content == "new" {
+            self.selection.query.content = item.stem
         }
         
         let shouldReplaceIcon = !((try? await item.children(range: .contentsOfDirectory.withSystemHidden).contains(where: { $0.name == "Icon\r" })) ?? false)
         
         if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
             self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
-            self.selection.query = project.stem
+            self.selection.query.content = project.stem
             
             if shouldReplaceIcon {
                 self.selection.iconSystemName = "xcodeproj.fill"

@@ -15,7 +15,7 @@ struct SearchResultItem: View {
     
     let item: any QueryItemProtocol
     
-    let match: Text
+    let match: QueryItem.Match
     
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
     
@@ -52,20 +52,16 @@ struct SearchResultItem: View {
     
     
     var body: some View {
+        let isSelected = index == modelProvider.selectionIndex
+        
         HStack {
             Group {
                 if let item = item as? QueryItem {
-                    item.smallIconView(isSelected: index == modelProvider.selectionIndex)
+                    item.smallIconView(isSelected: isSelected)
+                        .frame(width: 20, height: 20)
                 } else if let item = item as? QueryItemChild {
-                    AsyncView {
-                        try await item.item.preview(size: .square(20))
-                    } content: { value in
-                        Image(nativeImage: value)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 20, height: 20)
-                    }
-
+                    item.smallIconView(isSelected: isSelected)
+                        .frame(width: 20, height: 20)
                 } else {
                     Rectangle()
                         .fill(.clear)
@@ -74,16 +70,24 @@ struct SearchResultItem: View {
             }
             .frame(width: 20, height: 20)
             
-            if index == modelProvider.selectionIndex && item is QueryItemChild {
+            if isSelected && item is QueryItemChild {
                 help
             } else {
-                match
-                    .lineLimit(1)
+                if match.isPrimary {
+                    match.text
+                } else {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(item.query.content)
+                            .fontWeight(.medium)
+                        (Text("aka: ").foregroundStyle(.secondary) + match.text)
+                            .font(.callout)
+                    }
+                }
             }
             
             Spacer()
             
-            if index == modelProvider.selectionIndex {
+            if isSelected {
                 Button {
                     withErrorPresented {
                         item.reveal(query: modelProvider.searchText)
@@ -97,7 +101,7 @@ struct SearchResultItem: View {
                 .keyboardShortcut(.return, modifiers: .command)
             }
         }
-        .onChange(of: index == modelProvider.selectionIndex) { oldValue, newValue in
+        .onChange(of: isSelected) { oldValue, newValue in
             if newValue {
                 updatePopoverTask = Task {
                     guard item is QueryItemChild else { return }
@@ -112,12 +116,12 @@ struct SearchResultItem: View {
                 showPopover = false
             }
         }
-        .foregroundStyle(index == modelProvider.selectionIndex ? .white : .primary)
-        .padding(.vertical, 5)
+        .foregroundStyle(isSelected ? .white : .primary)
         .padding(.leading, 7)
+        .padding(.vertical, 2.5)
         .frame(maxWidth: .infinity)
-        .frame(height: index == modelProvider.selectionIndex && item is QueryItemChild ? nil : 25)
-        .background(index == modelProvider.selectionIndex ? Color.accentColor : .clear)
+        .frame(minHeight: 25)
+        .background(isSelected ? Color.accentColor : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .onHover { hovering in
             self.hovering = hovering
@@ -155,7 +159,7 @@ struct SearchResultItem: View {
 }
 
 #Preview {
-    SearchResultItem(index: 0, item: QueryItem.preview, match: Text("here"))
+    SearchResultItem(index: 0, item: QueryItem.preview, match: .init(text: Text("here"), isPrimary: true))
         .environment(ModelProvider.preview)
         .frame(width: 200)
 }

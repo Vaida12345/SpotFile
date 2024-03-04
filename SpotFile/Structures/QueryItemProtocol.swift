@@ -8,27 +8,20 @@
 
 import SwiftUI
 import Stratum
+import ViewCollection
 
 
-protocol QueryItemProtocol: AnyObject {
+protocol QueryItemProtocol: AnyObject, UndoTracking {
     
     var id: UUID { get }
     
-    var query: String { get }
+    var query: Query { get }
     
     var item: FinderItem { get }
     
     var openableFileRelativePath: String { get }
     
-    var mustIncludeFirstKeyword: Bool { get }
-    
-    var icon: Icon { get }
-    
     var iconSystemName: String { get }
-    
-    
-    /// the returned components are NOT lowercased
-    var queryComponents: [QueryComponent] { get }
     
     func updateRecords(_ query: String)
     
@@ -36,6 +29,8 @@ protocol QueryItemProtocol: AnyObject {
 
 
 extension QueryItemProtocol {
+    
+    // MARK: - Views
     
     @ViewBuilder
     func smallIconView(isSelected: Bool) -> some View {
@@ -51,150 +46,55 @@ extension QueryItemProtocol {
             } else {
                 Image(systemName: self.iconSystemName)
             }
-        } else if let image = self.icon.image {
-            Image(nsImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
         } else {
-            Image(systemName: "folder.badge.plus")
+            AsyncView {
+                try await self.item.preview(size: .square(64))
+            } content: { result in
+                Image(nativeImage: result)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            }
+            .id(self.item)
         }
     }
     
-    var iconView: Image {
+    @ViewBuilder
+    var iconView: some View {
         if !self.iconSystemName.isEmpty {
-            if self.iconSystemName == "xcodeproj" {
+            let image = if self.iconSystemName == "xcodeproj" {
                 Image(.xcodeproj)
             } else if self.iconSystemName == "xcodeproj.fill" {
                 Image(.xcodeprojFill)
             } else {
                 Image(systemName: self.iconSystemName)
             }
-        } else if let image = self.icon.image {
-            Image(nsImage: image)
+            
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 50, height: 50)
         } else {
-            Image(systemName: "folder.badge.plus")
+            AsyncView {
+                try await self.item.preview(size: .square(128))
+            } content: { result in
+                Image(nativeImage: result)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            }
+            .id(self.item)
+            .frame(width: 50, height: 50)
         }
     }
     
     
+    // MARK: - Handling matches
     
-    func updateQueryComponents() -> [QueryComponent] {
-        var components: [QueryComponent] = []
-        
-        var index = self.query.startIndex
-        var cumulative = ""
-        
-        while index < self.query.endIndex {
-            if (self.query[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) {
-                components.append(.content(cumulative))
-                cumulative = ""
-                continue
-            } else if self.query[index].isWhitespace || QueryItem.separators.contains(self.query[index]) {
-                components.append(.content(cumulative))
-                components.append(.spacer("\(self.query[index])"))
-                cumulative = ""
-                self.query.formIndex(after: &index)
-                continue
-            }
-            
-            cumulative.append(self.query[index])
-            self.query.formIndex(after: &index)
+    func match(query: String) -> QueryItem.Match? {
+        if let match = self.query.match(query: query) {
+            return QueryItem.Match(text: match, isPrimary: true)
         }
         
-        if !cumulative.isEmpty {
-            components.append(.content(cumulative))
-        }
-        
-        return components
-    }
-    
-    
-    func match(query: String) -> Text? {
-        let queryComponents = self.queryComponents
-        let query = Array(query.lowercased()) // use array, as array is `RandomAccessCollection`.
-        
-        return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
-    }
-    
-    private func __recursiveMatch(_query: ArraySlice<Character>, components: ArraySlice<QueryComponent>, isFirst: Bool = false) -> Text? {
-        guard !_query.isEmpty else {
-            return Text(components.map(\.value).joined(separator: "")) // end, returning trailing components
-        }
-        guard let component = components.first else {
-            // reached end of components
-            return nil
-        }
-        var query = _query
-        
-        switch component {
-        case .spacer(let spacer):
-            var shouldEmphasize = false
-            if spacer.first == query.first {
-                query.removeFirst()
-                shouldEmphasize = true
-            }
-            
-            return __recursiveMatch(_query: query, components: components.dropFirst()).map {
-                return Text(spacer).bold(shouldEmphasize) + $0
-            }
-            
-        case .content(let content):
-            if QueryItem.separators.contains(query.first!) || query.first!.isWhitespace { // query cannot be empty, as ensured by the guard on the first line
-                  // okay. maybe we should ignore the white space, maybe we should keep it
-                  // prefer keep it
-                
-                // if keep it, then this content cannot be matched, skipped.
-                if components.count != 1,
-                   let next = __recursiveMatch(_query: query, components: components.dropFirst()) {
-                    return Text(content) + next
-                }
-                
-                // still here? then cannot keep it
-                if let next = __recursiveMatch(_query: query.dropFirst(), components: components) {
-                    return next
-                }
-                
-                // no? then no match
-                return nil
-            }
-            
-            var cumulative = ""
-            var remaining = Substring()
-            
-            var index = content.startIndex
-            while index < content.endIndex {
-                let c = content[index]
-                if c.lowercased().first == query.first {
-                    query.removeFirst()
-                    cumulative.append(c)
-                } else {
-                    if cumulative.isEmpty {
-                        if self.mustIncludeFirstKeyword && isFirst {
-                            return nil
-                        }
-                        // does not match at all
-                        return __recursiveMatch(_query: query, components: components.dropFirst()).map { Text(content) + $0 }
-                    }
-                    remaining = content[index...]
-                    break
-                }
-                
-                content.formIndex(after: &index)
-            }
-            
-            
-            if let match = __recursiveMatch(_query: query, components: components.dropFirst()) {
-                let attributed = Text(cumulative).bold() + Text(remaining)
-                return attributed + match
-            } else if isFirst && self.mustIncludeFirstKeyword {
-                return nil
-            } else if let match = __recursiveMatch(_query: _query, components: components.dropFirst()) { // unconsumed, original query
-                let attributed = Text(content)
-                return attributed + match
-            } else {
-                return nil
-            }
-        }
+        return nil
     }
     
     

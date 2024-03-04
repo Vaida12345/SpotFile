@@ -60,7 +60,6 @@ struct SpotFileApp: App {
     final class ApplicationDelegate: NSObject, NSApplicationDelegate, ObservableObject, NSWindowDelegate {
         
         func applicationDidFinishLaunching(_ notification: Notification) {
-            try? FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").makeDirectory()
             try? FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").makeDirectory()
             try? FileManager.default.createDirectory(at: ModelProvider.storageLocation.deletingLastPathComponent(), withIntermediateDirectories: true)
         }

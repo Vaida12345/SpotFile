@@ -25,9 +25,6 @@ struct ChildOptionsView: View {
                     }
                     Text("When enabled, you can also search for contents of the folder by typing its name")
                         .foregroundStyle(.secondary)
-                          
-                      (Text("Please use the *update* button to notify the app of any changes, or the *Sync* button in menu bar."))
-                        .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
                     
                     Divider()
                     

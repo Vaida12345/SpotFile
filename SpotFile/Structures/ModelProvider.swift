@@ -34,7 +34,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     var shownStartIndex: Int = 0
     
-    var matches: [(Int, any QueryItemProtocol, Text)] = []
+    var matches: [(Int, any QueryItemProtocol, QueryItem.Match)] = []
     
     var isSearching = false
     
@@ -81,7 +81,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             let total = !previousSearchText.isEmpty && canUseLastResult ? previous.matches : self.items
             
-            let itemsMatches: [(QueryItem, Text)] = if previous.parentQuery != nil {
+            let itemsMatches: [(QueryItem, QueryItem.Match)] = if previous.parentQuery != nil {
                 []
             } else {
                 try await total.stream.compactMap { item in
@@ -93,7 +93,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         return nil
                     }
                 }.sequence.sorted(on: {
-                    ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.count)
+                    ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.content.count)
                 }, by: >)
             }
             
@@ -102,7 +102,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             }
             try Task.checkCancellation()
             
-            var _matches: [(any QueryItemProtocol, Text)] = []
+            var _matches: [(any QueryItemProtocol, QueryItem.Match)] = []
             
             guard itemsMatches.isEmpty && previous.matches.count == 1 else {
                 previous.matches = itemsMatches.map(\.0)
@@ -125,7 +125,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             if !previous.childrenMatches.isEmpty && canUseLastResult {
                 print("can use last result")
-                _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, Text)].self) { group in
+                _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
                     for child in previous.childrenMatches {
                         guard group.addTaskUnlessCancelled(operation: {
                             try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText)
@@ -150,7 +150,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         }
     }
     
-    private func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, Text)] {
+    private func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
         try Task.checkCancellation()
         // if `item` matches
         if let match = item.match(query: searchText) {
@@ -160,14 +160,14 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 return try await item.item.children(range: .contentsOfDirectory).compactMap { child in
                     guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { return nil }
                     let queryChild = QueryItemChild(parent: item, filename: child.name)
-                    return (queryChild, Text(child.name))
+                    return (queryChild, QueryItem.Match(text: Text(child.name), isPrimary: true))
                 }.allObjects()
             }
         }
         
         try Task.checkCancellation()
         
-        return try await withThrowingTaskGroup(of: [(any QueryItemProtocol, Text)].self) { group in
+        return try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
             for await child in try item.item.children(range: .contentsOfDirectory) {
                 guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { continue }
                 guard group.addTaskUnlessCancelled(operation: {
@@ -231,7 +231,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         do {
             let decoder = PropertyListDecoder()
             let data = try Data(contentsOf: ModelProvider.storageLocation)
-            return try decoder.decode(ModelProvider.self, from: data)
+            return try! decoder.decode(ModelProvider.self, from: data)
         } catch {
             return ModelProvider()
         }

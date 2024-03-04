@@ -16,11 +16,14 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
     let parent: (any QueryItemProtocol)! // no need unown, wont be circular anyway
     
     
-    var query: String {
-        if let parent = parent as? QueryItem {
-            self.openableFileRelativePath
+    var query: Query {
+        if parent is QueryItem {
+            Query(value: self.openableFileRelativePath, 
+                  mustIncludeFirstKeyword: false)
         } else {
-            self.parent.query + "/" + self.openableFileRelativePath
+            Query(value: self.parent.query.content + "/" + self.openableFileRelativePath, 
+                  mustIncludeFirstKeyword: false,
+                  queryComponents: self.parent.query.components + [.spacer("/")] + Query.component(for: self.openableFileRelativePath))
         }
     }
     
@@ -30,19 +33,7 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
     
     let openableFileRelativePath: String
     
-    var mustIncludeFirstKeyword: Bool {
-        self.parent.mustIncludeFirstKeyword
-    }
-    
-    var icon: Icon {
-        self.parent.icon
-    }
-    
-    var iconSystemName: String {
-        self.parent.iconSystemName
-    }
-    
-    lazy var queryComponents: [QueryComponent] = self.updateQueryComponents()
+    var iconSystemName: String { "" }
     
     func updateRecords(_ query: String) { }
     

@@ -15,11 +15,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     let id: UUID
     
-    var query: String {
-        didSet {
-            self.queryComponents = updateQueryComponents()
-        }
-    }
+    var query: Query
     
     var item: FinderItem {
         didSet {
@@ -32,35 +28,22 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     var openableFileRelativePath: String
     
-    var icon: Icon
-    
+    /// If empty, use finder preview.
     var iconSystemName: String = ""
     
     
-    var mustIncludeFirstKeyword = false
-    
     @ObservationIgnored
-    var openedRecords: [String: Int]
-    
-    
-    /// the returned components are lowercased.
-    @ObservationIgnored
-    var queryComponents: [QueryComponent] = []
+    var openedRecords: [String: Int] = [:]
     
     var childOptions: ChildOptions = .init()
     
+    var additionalQueries: [Query] = []
     
-    func updateIcon() async throws {
-        let icon = try await self.item.preview(size: .square(64))
-        self.icon.image = icon
-    }
     
     func delete() throws {
-        try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "icons").appending(path: "\(self.icon.id).heic").removeIfExists()
         try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: self.id.description).removeIfExists()
         
         self.isItemUpdated = true // set to true is case undo
-        self.icon.isUpdated = true
     }
     
     func updateRecords(_ query: String) {
@@ -68,20 +51,42 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     }
     
     
-    static let separators: [Character] = ["_", "/"]
+    // MARK: - Handling matches
+    
+    func match(query: String) -> Match? {
+        if let match = self.query.match(query: query) {
+            return Match(text: match, isPrimary: true)
+        }
+        
+        for additionalQuery in additionalQueries {
+            if let match = additionalQuery.match(query: query) {
+                return Match(text: match, isPrimary: false)
+            }
+        }
+        
+        return nil
+    }
     
     
+    struct Match {
+        
+        let text: Text
+        
+        let isPrimary: Bool
+        
+    }
+    
+    
+    // MARK: - Initializers, static values
     
     init(query: String, item: FinderItem, openableFileRelativePath: String) {
         self.id = UUID()
-        self.query = query
+        self.query = Query(value: query)
         self.item = item
         self.openableFileRelativePath = openableFileRelativePath
-        self.icon = Icon(image: nil)
-        self.openedRecords = [:]
-        
-        self.queryComponents = updateQueryComponents()
     }
+    
+    static let separators: [Character] = ["_", "/"]
     
     static let preview = QueryItem(query: "swift testRoom",
                                    item: FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Swift/testRoom/testRoom"),
@@ -113,13 +118,10 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         case id
         case _query
         case _openableFileRelativePath
-        case _icon
         case _iconSystemName
-        case _openedCount
-        case _mustIncludeFirstKeyword
         case _openedRecords
-        case _children
         case _childOptions
+        case _additionalQueries
     }
     
     func encode(to encoder: Encoder) throws {
@@ -134,17 +136,16 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         }
         
         try container.encode(self._openableFileRelativePath, forKey: ._openableFileRelativePath)
-        try container.encode(self._icon, forKey: ._icon)
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
         try container.encode(self.openedRecords, forKey: ._openedRecords)
-        try container.encode(self._mustIncludeFirstKeyword, forKey: ._mustIncludeFirstKeyword)
         try container.encode(self._childOptions, forKey: ._childOptions)
+        try container.encode(self._additionalQueries, forKey: ._additionalQueries)
     }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
-        self._query = try container.decode(String.self, forKey: ._query)
+        self._query = try container.decode(Query.self, forKey: ._query)
         
         let bookmarkData = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: id.description)
         
@@ -157,11 +158,9 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         self._item = FinderItem(at: url)
         
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)
-        self._icon = try container.decode(Icon.self, forKey: ._icon)
         self._iconSystemName = try container.decode(String.self, forKey: ._iconSystemName)
         self.openedRecords = try container.decode([String:Int].self, forKey: ._openedRecords)
-        self._mustIncludeFirstKeyword = try container.decode(Bool.self, forKey: ._mustIncludeFirstKeyword)
-        self.childOptions = try container.decode(ChildOptions.self, forKey: ._childOptions)
-        self.queryComponents = updateQueryComponents()
+        self._childOptions = try container.decode(ChildOptions.self, forKey: ._childOptions)
+        self._additionalQueries = try container.decode([Query].self, forKey: ._additionalQueries)
     }
 }

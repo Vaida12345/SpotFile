@@ -18,7 +18,7 @@ struct SearchResultView: View {
                     HStack {
                         item.smallIconView(isSelected: false)
                             .frame(width: 20, height: 20)
-                        Text(item.query)
+                        Text(item.query.content)
                             .bold()
                         Spacer()
                     }

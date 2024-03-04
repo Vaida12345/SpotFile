@@ -35,7 +35,16 @@
         }
       }
     },
-    "An optional name of SF Symbol to be used as icon" : {
+    "Additional controls" : {
+
+    },
+    "Additional names" : {
+
+    },
+    "aka: " : {
+
+    },
+    "An optional SF Symbol used as icon" : {
 
     },
     "Browse..." : {
@@ -51,6 +60,9 @@
 
     },
     "Define what kind of files should be included in search results." : {
+
+    },
+    "Drop the file here to set its location" : {
 
     },
     "Enable deep search" : {
@@ -80,6 +92,9 @@
     "Must include first keyword" : {
 
     },
+    "name" : {
+
+    },
     "New" : {
 
     },
@@ -92,13 +107,13 @@
     "Override Icon" : {
 
     },
-    "Please use the *update* button to notify the app of any changes, or the *Sync* button in menu bar." : {
-
-    },
     "Quit SpotFile" : {
 
     },
     "Relative Path" : {
+
+    },
+    "Remove" : {
 
     },
     "Save" : {
@@ -122,7 +137,10 @@
     "The executable's relative path to the *location* above" : {
 
     },
-    "When conducting searches, the leading keyword *%@* must be included to find this item." : {
+    "The target location. Note: You can also drop in the file." : {
+
+    },
+    "When conducting searches, the leading keyword *%@* must be included (or partially included) to find this item." : {
 
     },
     "When enabled, you can also search for contents of the folder by typing its name" : {

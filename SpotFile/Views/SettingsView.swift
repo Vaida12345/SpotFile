@@ -21,7 +21,7 @@ struct SettingsView: View {
     
     var groups: [String : [QueryItem]] {
         let items = modelProvider.items.filter { !searchText.isEmpty => $0.match(query: searchText) != nil }
-        var dict = [String : [QueryItem]](grouping: items, by: { $0.queryComponents.first?.value ?? "" })
+        var dict = [String : [QueryItem]](grouping: items, by: { $0.query.components.first?.value ?? "" })
         for (key, value) in dict {
             if value.count == 1 {
                 dict.removeValue(forKey: key)
@@ -34,12 +34,16 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationSplitView {
-            List(selection: $selectedItem) {
-                ForEach(Array(groups).sorted(on: \.key, by: <), id: \.key) { item in
-                    lists(item.key, for: item.value)
+            VStack(alignment: .leading, spacing: 0) {
+                List(selection: $selectedItem) {
+                    ForEach(Array(groups).sorted(on: \.key, by: <), id: \.key) { item in
+                        lists(item.key, for: item.value)
+                    }
                 }
-            }
-            .overlay(alignment: .bottomLeading) {
+                .scrollIndicators(.never)
+                
+                Divider()
+                
                 Button {
                     let newItem = QueryItem.new()
                     defer {
@@ -51,10 +55,10 @@ struct SettingsView: View {
                 } label: {
                     Label("New", systemImage: "plus")
                 }
+                .padding(.all, 8)
                 .contentShape(Rectangle())
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.accentColor)
-                .padding()
                 .keyboardShortcut(.init("n"))
             }
         } detail: {
@@ -73,12 +77,12 @@ struct SettingsView: View {
     
     
     func lists(_ title: String, for items: [QueryItem]) -> some View {
-        let lists = ForEach(items.sorted(on: \.query, by: <)) { item in
+        let lists = ForEach(items.sorted(on: \.query.content, by: <)) { item in
             var value: String {
                 if title.isEmpty {
-                    return item.query
+                    return item.query.content
                 } else {
-                    let _value = item.query.dropFirst(title.count)
+                    let _value = item.query.content.dropFirst(title.count)
                     return String(_value.dropFirst(while: { $0.isWhitespace }))
                 }
             }
