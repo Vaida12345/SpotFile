@@ -146,7 +146,7 @@ struct SettingsSelectionView: View {
                     await self.add(item: item)
                 }
             }
-            .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.item]) { result in
+            .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.item, .folder]) { result in
                 do {
                     let url = try result.get()
                     let item = FinderItem(at: url)
@@ -199,7 +199,10 @@ struct SettingsSelectionView: View {
             self.selection.query.content = item.stem
         }
         
-        let shouldReplaceIcon = !((try? await item.children(range: .contentsOfDirectory.withSystemHidden).contains(where: { $0.name == "Icon\r" })) ?? false)
+        let shouldReplaceIcon = !item.appending(path: "Icon\r").exists
+        if !shouldReplaceIcon {
+            self.selection.iconSystemName = ""
+        }
         
         if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
             self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""

@@ -18,8 +18,12 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     var query: Query
     
     var item: FinderItem {
+        willSet {
+            item.url.stopAccessingSecurityScopedResource()
+        }
         didSet {
             isItemUpdated = true
+            let _ = item.url.startAccessingSecurityScopedResource()
         }
     }
     
@@ -84,6 +88,10 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         self.query = Query(value: query)
         self.item = item
         self.openableFileRelativePath = openableFileRelativePath
+    }
+    
+    deinit {
+        self.item.url.stopAccessingSecurityScopedResource()
     }
     
     static let separators: [Character] = ["_", "/"]
@@ -231,6 +239,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         if bookmarkDataIsStale {
             try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
         }
+        let _ = url.startAccessingSecurityScopedResource()
         
         self._item = FinderItem(at: url)
         
