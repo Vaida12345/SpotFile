@@ -216,6 +216,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         
         let bookmarkData = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: id.description)
         if isItemUpdated {
+            try bookmarkData.removeIfExists()
             try item.url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
             isItemUpdated = false
         }
@@ -237,6 +238,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         var bookmarkDataIsStale = false
         let url = try URL(resolvingBookmarkData: Data(at: bookmarkData), options: [], relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale)
         if bookmarkDataIsStale {
+            try bookmarkData.removeIfExists()
             try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
         }
         let _ = url.startAccessingSecurityScopedResource()

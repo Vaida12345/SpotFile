@@ -10,7 +10,7 @@ import Stratum
 
 struct SettingsSelectionView: View {
     
-    @Bindable var selection: QueryItem
+    let selection: QueryItem
     
     @State private var showFilePicker = false
     
@@ -26,6 +26,7 @@ struct SettingsSelectionView: View {
     
     
     var body: some View {
+        @Bindable var selection = selection
         let itemIsNew = selection.query.content == "new"
         
         DropHandlerView()
@@ -64,6 +65,7 @@ struct SettingsSelectionView: View {
                                 .onSubmit {
                                     focusedState = .relativePath
                                 }
+                                .disabled(true)
                                 
                                 Button("Browse...") {
                                     showFilePicker = true
@@ -166,9 +168,7 @@ struct SettingsSelectionView: View {
             .toolbar {
                 Button {
                     try? selection.delete()
-                    modelProvider.removeAll(from: \.items, undoManager: undoManager) {
-                        $0.id == selection.id
-                    }
+                    modelProvider.remove(selection, from: \.items, undoManager: undoManager)
                 } label: {
                     Image(systemName: "trash")
                         .symbolRenderingMode(.multicolor)
@@ -193,6 +193,7 @@ struct SettingsSelectionView: View {
     
     func add(item: FinderItem) async {
         self.selection.item = item
+        self.selection.isItemUpdated = true
         self.selection.childOptions.isDirectory = item.isDirectory && !item.isPackage
         
         if self.selection.query.content == "new" {

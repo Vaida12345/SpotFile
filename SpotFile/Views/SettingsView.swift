@@ -64,6 +64,7 @@ struct SettingsView: View {
         } detail: {
             if let selection = modelProvider.items.first(where: { $0.id == selectedItem }) {
                 SettingsSelectionView(selection: selection)
+                    .id(selectedItem)
             } else {
                 Text("Select an item on the left\nOr add a new item.")
                     .bold()

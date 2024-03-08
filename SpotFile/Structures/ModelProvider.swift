@@ -119,6 +119,14 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 previous.matches = [previous.matches.first(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased()) })!]
             }
             
+            guard (previous.matches.first?.childOptions.isEnabled ?? false) else {
+                previous.matches = itemsMatches.map(\.0)
+                previous.childrenMatches = []
+                previous.parentQuery = nil
+                onComplete()
+                return
+            }
+            
             var isInitial: Bool = false
             if previous.parentQuery == nil {
                 isInitial = true

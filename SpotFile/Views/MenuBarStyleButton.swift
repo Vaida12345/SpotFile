@@ -50,13 +50,13 @@ struct MenuBarStyleButton<Label>: View where Label: View {
                     .frame(width: 40)
                 }
             }
+            .padding(.vertical, 5)
+            .padding(.leading, 7)
+            .frame(maxWidth: .infinity)
+            .frame(height: 25)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.vertical, 5)
-        .padding(.leading, 7)
-        .frame(maxWidth: .infinity)
-        .frame(height: 25)
         .background(isOnHover ? Color.accentColor : .clear)
         .onHover { hovering in
             self.isOnHover = hovering
