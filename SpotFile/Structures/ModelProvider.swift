@@ -140,6 +140,15 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             let _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
+                for child in previous.childrenMatches {
+                    _ = child.item.url.startAccessingSecurityScopedResource()
+                }
+                defer {
+                    for child in previous.childrenMatches {
+                        child.item.url.stopAccessingSecurityScopedResource()
+                    }
+                }
+                
                 print("can use last result")
                 _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
                     for child in previous.childrenMatches {
@@ -153,6 +162,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             } else {
                 // cannot use last result
                 print("cannot use last result, using search text \"\(searchText)\"")
+                _ = previous.matches.first!.item.url.startAccessingSecurityScopedResource()
+                defer { previous.matches.first!.item.url.stopAccessingSecurityScopedResource() }
                 _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
             }
             

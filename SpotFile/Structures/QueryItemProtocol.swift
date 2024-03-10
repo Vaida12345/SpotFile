@@ -104,6 +104,8 @@ extension QueryItemProtocol {
         updateRecords(query)
         withErrorPresented {
             let path = item
+            _ = path.url.startAccessingSecurityScopedResource()
+            defer { path.url.stopAccessingSecurityScopedResource() }
             try path.reveal()
             postSubmitAction()
         }
@@ -120,6 +122,8 @@ extension QueryItemProtocol {
                 } else {
                     item
                 }
+                _ = path.url.startAccessingSecurityScopedResource()
+                defer { path.url.stopAccessingSecurityScopedResource() }
                 try await path.open()
                 postSubmitAction()
             }

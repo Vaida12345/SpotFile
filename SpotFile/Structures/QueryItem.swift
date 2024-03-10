@@ -23,7 +23,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         }
         didSet {
             isItemUpdated = true
-            let _ = item.url.startAccessingSecurityScopedResource()
         }
     }
     
@@ -241,7 +240,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
             try bookmarkData.removeIfExists()
             try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
         }
-        let _ = url.startAccessingSecurityScopedResource()
         
         self._item = FinderItem(at: url)
         
