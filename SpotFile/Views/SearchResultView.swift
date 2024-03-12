@@ -57,7 +57,6 @@ struct SearchResultView: View {
                         Divider()
                         Text("\(modelProvider.matches.count - 25) more items")
                     }
-                    .background(.thickMaterial)
                 }
                 
             }

@@ -65,6 +65,26 @@ struct Query: Codable, Identifiable {
         let queryComponents = self.components
         let query = Array(query.lowercased()) // use array, as array is `RandomAccessCollection`.
         
+        if queryComponents.count == 1, case let .content(content) = queryComponents.first { // is onlys, special case: allow jump-match
+            var cumulative = Text("")
+            var query = query
+            var index = content.startIndex
+            
+            while index < content.endIndex {
+                let c = content[index]
+                if c.lowercased().first == query.first {
+                    query.removeFirst()
+                    cumulative = cumulative + Text("\(c)").bold()
+                } else {
+                    cumulative = cumulative + Text("\(c)")
+                }
+                
+                content.formIndex(after: &index)
+            }
+            
+            return query.isEmpty ? cumulative : nil
+        }
+        
         return __recursiveMatch(_query: query[query.startIndex...], components: queryComponents[0...], isFirst: true)
     }
     
