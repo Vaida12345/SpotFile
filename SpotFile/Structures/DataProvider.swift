@@ -40,9 +40,10 @@ public protocol DataProvider: Codable, Identifiable {
 extension DataProvider {
     
     /// The path indicating the location where this ``DataProvider`` is persisted on disk.
-    @inlinable
     public static var storageLocation: URL {
-        URL(filePath: NSHomeDirectory() + "/Library/Application Support/DataProviders/\(Self.self).plist", directoryHint: .notDirectory)
+        let dataProviderDirectory = URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/DataProviders")
+        try! FinderItem(at: dataProviderDirectory).makeDirectory()
+        return dataProviderDirectory.appendingPathComponent("/\(Self.self).plist", conformingTo: .propertyList)
     }
     
     /// Save the encoded provider to ``storageItem`` using `.plist`.

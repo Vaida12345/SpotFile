@@ -18,9 +18,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     var query: Query
     
     var item: FinderItem {
-        willSet {
-            item.url.stopAccessingSecurityScopedResource()
-        }
         didSet {
             isItemUpdated = true
         }
@@ -57,12 +54,12 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     // MARK: - Handling matches
     
     func match(query: String) -> Match? {
-        if let match = self.query.match(query: query) {
+        if let match = self.query.match(query: query, isChild: false) {
             return Match(text: match, isPrimary: true)
         }
         
         for additionalQuery in additionalQueries {
-            if let match = additionalQuery.match(query: query) {
+            if let match = additionalQuery.match(query: query, isChild: true) {
                 return Match(text: match, isPrimary: false)
             }
         }
@@ -87,10 +84,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         self.query = Query(value: query)
         self.item = item
         self.openableFileRelativePath = openableFileRelativePath
-    }
-    
-    deinit {
-        self.item.url.stopAccessingSecurityScopedResource()
     }
     
     static let separators: [Character] = ["_", "/"]
@@ -206,20 +199,14 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         case _openedRecords
         case _childOptions
         case _additionalQueries
+        case _item
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.id, forKey: .id)
         try container.encode(self._query, forKey: ._query)
-        
-        let bookmarkData = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: id.description)
-        if isItemUpdated {
-            try bookmarkData.removeIfExists()
-            try item.url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
-            isItemUpdated = false
-        }
-        
+        try container.encode(self._item, forKey: ._item)
         try container.encode(self._openableFileRelativePath, forKey: ._openableFileRelativePath)
         try container.encode(self._iconSystemName, forKey: ._iconSystemName)
         try container.encode(self.openedRecords, forKey: ._openedRecords)
@@ -231,18 +218,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
         self._query = try container.decode(Query.self, forKey: ._query)
-        
-        let bookmarkData = FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: id.description)
-        
-        var bookmarkDataIsStale = false
-        let url = try URL(resolvingBookmarkData: Data(at: bookmarkData), options: [], relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale)
-        if bookmarkDataIsStale {
-            try bookmarkData.removeIfExists()
-            try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil).write(to: bookmarkData)
-        }
-        
-        self._item = FinderItem(at: url)
-        
+        self._item = try container.decode(FinderItem.self, forKey: ._item)
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)
         self._iconSystemName = try container.decode(String.self, forKey: ._iconSystemName)
         self.openedRecords = try container.decode([String:Int].self, forKey: ._openedRecords)

@@ -61,11 +61,11 @@ struct Query: Codable, Identifiable {
     }
     
     
-    func match(query: String) -> Text? {
+    func match(query: String, isChild: Bool) -> Text? {
         let queryComponents = self.components
         let query = Array(query.lowercased()) // use array, as array is `RandomAccessCollection`.
         
-        if queryComponents.count == 1, case let .content(content) = queryComponents.first { // is onlys, special case: allow jump-match
+        if queryComponents.count == 1 && !isChild, case let .content(content) = queryComponents.first { // is only, special case: allow jump-match
             var cumulative = Text("")
             var query = query
             var index = content.startIndex

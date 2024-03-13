@@ -65,7 +65,6 @@ struct SettingsSelectionView: View {
                                 .onSubmit {
                                     focusedState = .relativePath
                                 }
-                                .disabled(true)
                                 
                                 Button("Browse...") {
                                     showFilePicker = true

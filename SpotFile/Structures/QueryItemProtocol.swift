@@ -90,7 +90,7 @@ extension QueryItemProtocol {
     // MARK: - Handling matches
     
     func match(query: String) -> QueryItem.Match? {
-        if let match = self.query.match(query: query) {
+        if let match = self.query.match(query: query, isChild: self is QueryItemChild) {
             return QueryItem.Match(text: match, isPrimary: true)
         }
         
@@ -104,8 +104,6 @@ extension QueryItemProtocol {
         updateRecords(query)
         withErrorPresented {
             let path = item
-            _ = path.url.startAccessingSecurityScopedResource()
-            defer { path.url.stopAccessingSecurityScopedResource() }
             try path.reveal()
             postSubmitAction()
         }
@@ -122,8 +120,6 @@ extension QueryItemProtocol {
                 } else {
                     item
                 }
-                _ = path.url.startAccessingSecurityScopedResource()
-                defer { path.url.stopAccessingSecurityScopedResource() }
                 try await path.open()
                 postSubmitAction()
             }
