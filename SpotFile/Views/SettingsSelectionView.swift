@@ -63,6 +63,10 @@ struct SettingsSelectionView: View {
                                     selection.item = FinderItem(at: $0)
                                 })
                                 .onSubmit {
+                                    guard selection.item.exists else {
+                                        AlertManager(title: "The file does not exist", message: "Please paste your path again.").present()
+                                        return
+                                    }
                                     focusedState = .relativePath
                                 }
                                 
@@ -166,7 +170,6 @@ struct SettingsSelectionView: View {
             }
             .toolbar {
                 Button {
-                    try? selection.delete()
                     modelProvider.remove(selection, from: \.items, undoManager: undoManager)
                 } label: {
                     Image(systemName: "trash")
@@ -192,7 +195,6 @@ struct SettingsSelectionView: View {
     
     func add(item: FinderItem) async {
         self.selection.item = item
-        self.selection.isItemUpdated = true
         self.selection.childOptions.isDirectory = item.isDirectory && !item.isPackage
         
         if self.selection.query.content == "new" {

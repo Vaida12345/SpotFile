@@ -17,14 +17,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     var query: Query
     
-    var item: FinderItem {
-        didSet {
-            isItemUpdated = true
-        }
-    }
-    
-    @ObservationIgnored
-    var isItemUpdated = true
+    var item: FinderItem
     
     var openableFileRelativePath: String
     
@@ -38,13 +31,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     var childOptions: ChildOptions = .init()
     
     var additionalQueries: [Query] = []
-    
-    
-    func delete() throws {
-        try FinderItem(at: ModelProvider.storageLocation).enclosingFolder.appending(path: "bookmarks").appending(path: self.id.description).removeIfExists()
-        
-        self.isItemUpdated = true // set to true is case undo
-    }
     
     func updateRecords(_ query: String) {
         self.openedRecords[query, default: 0] += 1
@@ -192,7 +178,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     // MARK: - Codable
     
     enum CodingKeys: CodingKey {
-        case id
         case _query
         case _openableFileRelativePath
         case _iconSystemName
@@ -204,7 +189,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.id, forKey: .id)
         try container.encode(self._query, forKey: ._query)
         try container.encode(self._item, forKey: ._item)
         try container.encode(self._openableFileRelativePath, forKey: ._openableFileRelativePath)
@@ -216,7 +200,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(UUID.self, forKey: .id)
+        self.id = UUID()
         self._query = try container.decode(Query.self, forKey: ._query)
         self._item = try container.decode(FinderItem.self, forKey: ._item)
         self._openableFileRelativePath = try container.decode(String.self, forKey: ._openableFileRelativePath)

@@ -119,6 +119,9 @@
     "Please enter filters in Regex, including the slashes" : {
 
     },
+    "Please paste your path again." : {
+
+    },
     "Quit SpotFile" : {
 
     },
@@ -150,6 +153,9 @@
 
     },
     "The executable's relative path to the *location* above" : {
+
+    },
+    "The file does not exist" : {
 
     },
     "The target location. Note: You can also drop in the file." : {
