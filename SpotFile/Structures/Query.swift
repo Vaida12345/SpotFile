@@ -35,11 +35,13 @@ struct Query: Codable, Identifiable {
         
         var index = value.startIndex
         var cumulative = ""
+        var isNumber = value.first?.isNumber ?? false
         
         while index < value.endIndex {
-            if (value[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) {
+            if (value[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) || isNumber != value[index].isNumber {
                 components.append(.content(cumulative))
                 cumulative = ""
+                isNumber = value[index].isNumber
                 continue
             } else if value[index].isWhitespace || QueryItem.separators.contains(value[index]) {
                 components.append(.content(cumulative))
