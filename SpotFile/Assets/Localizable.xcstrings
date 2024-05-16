@@ -155,7 +155,13 @@
     "The executable's relative path to the *location* above" : {
 
     },
+    "The executable's relative path to the location of the child" : {
+
+    },
     "The file does not exist" : {
+
+    },
+    "The relative path to open. When not exist, the file / folder would be opened / shown." : {
 
     },
     "The target location. Note: You can also drop in the file." : {

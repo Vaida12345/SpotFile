@@ -169,21 +169,24 @@ struct SettingsSelectionView: View {
                 }
             }
             .toolbar {
-                Button {
-                    modelProvider.remove(selection, from: \.items, undoManager: undoManager)
-                } label: {
-                    Image(systemName: "trash")
-                        .symbolRenderingMode(.multicolor)
+                HStack {
+                    Button {
+                        modelProvider.remove(selection, from: \.items, undoManager: undoManager)
+                    } label: {
+                        Image(systemName: "trash")
+                            .symbolRenderingMode(.multicolor)
+                    }
+                    .keyboardShortcut(.delete, modifiers: [])
+                    
+                    Divider()
+                    
+                    Button {
+                        showInspector.toggle()
+                    } label: {
+                        Image(systemName: "sidebar.right")
+                    }
+                    .help("Additional controls")
                 }
-                .keyboardShortcut(.delete, modifiers: [])
-                .padding(.trailing)
-                
-                Button {
-                    showInspector.toggle()
-                } label: {
-                    Image(systemName: "sidebar.right")
-                }
-                .help("Additional controls")
             }
     }
     
@@ -195,7 +198,7 @@ struct SettingsSelectionView: View {
     
     func add(item: FinderItem) async {
         self.selection.item = item
-        self.selection.childOptions.isDirectory = item.isDirectory && !item.isPackage
+        self.selection.childOptions.isDirectory = item.isDirectory && !((try? item.fileType.contains(.package)) ?? false)
         
         if self.selection.query.content == "new" {
             self.selection.query.content = item.stem
@@ -206,7 +209,7 @@ struct SettingsSelectionView: View {
             self.selection.iconSystemName = ""
         }
         
-        if let project = try? await item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
+        if let project = try? item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
             self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
             if self.selection.query.content == "new" {
                 self.selection.query.content = project.stem

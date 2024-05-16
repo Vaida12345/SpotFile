@@ -41,6 +41,7 @@ struct SettingsView: View {
                     }
                 }
                 .scrollIndicators(.never)
+                .searchable(text: $searchText, placement: .sidebar)
                 
                 Divider()
                 
@@ -73,7 +74,6 @@ struct SettingsView: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .searchable(text: $searchText)
     }
     
     

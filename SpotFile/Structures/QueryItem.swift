@@ -97,6 +97,9 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         
         var filterBy: String = ""
         
+        /// The relative path to open. when not exist, the file / folder would be opened / shown.
+        var relativePath: String = ""
+        
         var filters: [Regex<Substring>] = []
         
         
@@ -132,12 +135,14 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
                       includeFolder: Bool = true,
                       includeFile: Bool = false,
                       enumeration: Bool = true,
+                      relativePath: String = "",
                       filterBy: String = "") {
             self.isDirectory = isDirectory
             self.isEnabled = isEnabled
             self.includeFolder = includeFolder
             self.includeFile = includeFile
             self.enumeration = enumeration
+            self.relativePath = relativePath
             self.filterBy = filterBy
         }
         
@@ -148,6 +153,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
             case includeFile
             case enumeration
             case filterBy
+            case relativePath
         }
         
         func encode(to encoder: Encoder) throws {
@@ -157,6 +163,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
             try container.encode(self.includeFolder, forKey: QueryItem.ChildOptions.CodingKeys.includeFolder)
             try container.encode(self.includeFile, forKey: QueryItem.ChildOptions.CodingKeys.includeFile)
             try container.encode(self.enumeration, forKey: QueryItem.ChildOptions.CodingKeys.enumeration)
+            try container.encode(self.relativePath, forKey: QueryItem.ChildOptions.CodingKeys.relativePath)
             try container.encode(self.filterBy, forKey: QueryItem.ChildOptions.CodingKeys.filterBy)
         }
         
@@ -167,6 +174,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
             self.includeFolder = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.includeFolder)
             self.includeFile = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.includeFile)
             self.enumeration = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.enumeration)
+            self.relativePath = try container.decodeIfPresent(String.self, forKey: QueryItem.ChildOptions.CodingKeys.relativePath) ?? ""
             self.filterBy = try container.decodeIfPresent(String.self, forKey: QueryItem.ChildOptions.CodingKeys.filterBy) ?? ""
             
             try self.updateFilters()

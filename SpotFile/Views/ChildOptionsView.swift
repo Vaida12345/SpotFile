@@ -80,6 +80,17 @@ struct ChildOptionsView: View {
                         
                         Text("Please enter filters in Regex, including the slashes")
                             .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
+                        
+                        HStack {
+                            Text("Relative Path")
+                            
+                            TextField("The executable's relative path to the location of the child", text: $options.relativePath)
+                                .multilineTextAlignment(.trailing)
+                        }
+                        .padding(.top)
+                        
+                        Text("The relative path to open. When not exist, the file / folder would be opened / shown.")
+                            .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
                     }
                     .disabled(!options.isEnabled)
                     .modifier(enabled: !options.isEnabled) { view in

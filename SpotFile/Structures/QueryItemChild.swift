@@ -31,6 +31,14 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
         self.parent.item.appending(path: openableFileRelativePath)
     }
     
+    var queryItem: QueryItem {
+        if let parent = parent as? QueryItem {
+            return parent
+        } else {
+            return (parent as! QueryItemChild).queryItem
+        }
+    }
+    
     let openableFileRelativePath: String
     
     var iconSystemName: String { "" }

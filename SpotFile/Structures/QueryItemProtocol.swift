@@ -115,10 +115,17 @@ extension QueryItemProtocol {
         let openableFileRelativePath = self.openableFileRelativePath
         Task {
             await withErrorPresented {
-                let path = if self is QueryItem {
-                    item.appending(path: openableFileRelativePath)
+                let path: FinderItem
+                
+                if self is QueryItem {
+                    path = item.appending(path: openableFileRelativePath)
                 } else {
-                    item
+                    let _item = (self as! QueryItemChild).queryItem
+                    if item.appending(path: _item.childOptions.relativePath).exists {
+                        path = item.appending(path: _item.childOptions.relativePath)
+                    } else {
+                        path = item
+                    }
                 }
                 try await path.open()
                 postSubmitAction()

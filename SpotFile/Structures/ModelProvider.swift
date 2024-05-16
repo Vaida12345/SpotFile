@@ -9,6 +9,7 @@ import Foundation
 import Stratum
 import SwiftUI
 import UniformTypeIdentifiers
+import ConcurrentStream
 
 
 @Observable
@@ -119,7 +120,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 previous.matches = [previous.matches.first(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased()) })!]
             }
             
-            guard (previous.matches.first?.childOptions.isEnabled ?? false) else {
+            guard (previous.matches.first?.childOptions.isEnabled ?? false) && (searchText.hasPrefix(" ") || searchText.hasSuffix(" ")) else {
                 previous.matches = itemsMatches.map(\.0)
                 previous.childrenMatches = []
                 previous.parentQuery = nil
@@ -170,16 +171,20 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         try Task.checkCancellation()
         
         // if `item` matches
-        if !(item is QueryItem) && childOptions.filterContains(item.item.name),
-           let match = item.match(query: searchText) {
-            return [(item, match)]
+        if !(item is QueryItem) {
+            // the actual matching
+            if childOptions.filterContains(item.item.name), let match = item.match(query: searchText) {
+                return [(item, match)]
+            } else if !childOptions.enumeration {
+                return [] // ends here
+            }
         }
         
-        guard !item.item.isPackage else { return [] }
+        guard !((try? item.item.fileType.contains(.package)) ?? false) else { return [] }
         try Task.checkCancellation()
         
         return try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
-            for await child in try item.item.children(range: .contentsOfDirectory) {
+            for child in try item.item.children(range: .contentsOfDirectory) {
                 guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { continue }
                 guard group.addTaskUnlessCancelled(operation: {
                     let queryChild = QueryItemChild(parent: item, filename: child.name)
