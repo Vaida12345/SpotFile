@@ -11,6 +11,7 @@
 		B43EA8792B80DDC100568440 /* SpotFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EA8782B80DDC100568440 /* SpotFileTests.swift */; };
 		B43EA8812B81A2F500568440 /* SearchResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EA8802B81A2F500568440 /* SearchResultView.swift */; };
 		B43EA8832B81AC0F00568440 /* TextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EA8822B81AC0F00568440 /* TextFieldView.swift */; };
+		B44B62392BF7286900010907 /* StratumMacros in Frameworks */ = {isa = PBXBuildFile; productRef = B44B62382BF7286900010907 /* StratumMacros */; };
 		B4515B2F2B81D7D70032D032 /* SearchResultItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4515B2E2B81D7D70032D032 /* SearchResultItem.swift */; };
 		B46EBD1C2B9587660037D797 /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46EBD1B2B9587660037D797 /* Query.swift */; };
 		B46EBD1E2B95B4340037D797 /* SettingsSelectionInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46EBD1D2B95B4340037D797 /* SettingsSelectionInspector.swift */; };
@@ -83,6 +84,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4FAF3F92B6F3EB400DBC07E /* ViewCollection in Frameworks */,
+				B44B62392BF7286900010907 /* StratumMacros in Frameworks */,
 				B41C13682B82FCF900E7EC86 /* ViewCollection in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -214,6 +216,7 @@
 			packageProductDependencies = (
 				B4FAF3F82B6F3EB400DBC07E /* ViewCollection */,
 				B41C13672B82FCF900E7EC86 /* ViewCollection */,
+				B44B62382BF7286900010907 /* StratumMacros */,
 			);
 			productName = SpotFile;
 			productReference = B47C28502B6F257E006BB7FE /* SpotFile.app */;
@@ -249,6 +252,7 @@
 			mainGroup = B47C28472B6F257E006BB7FE;
 			packageReferences = (
 				B447F6C92BBC2AB7000E8DCB /* XCLocalSwiftPackageReference "../../Packages/ViewCollection" */,
+				B44B62372BF7286900010907 /* XCLocalSwiftPackageReference "../../Packages/StratumMacros" */,
 			);
 			productRefGroup = B47C28512B6F257E006BB7FE /* Products */;
 			projectDirPath = "";
@@ -577,12 +581,20 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../Packages/ViewCollection;
 		};
+		B44B62372BF7286900010907 /* XCLocalSwiftPackageReference "../../Packages/StratumMacros" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Packages/StratumMacros;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		B41C13672B82FCF900E7EC86 /* ViewCollection */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ViewCollection;
+		};
+		B44B62382BF7286900010907 /* StratumMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = StratumMacros;
 		};
 		B4FAF3F82B6F3EB400DBC07E /* ViewCollection */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import StratumMacros
 
 
 extension QueryItem {
     
-    struct ChildOptions: Codable {
+    @codable
+    struct ChildOptions {
         
         /// Whether this item is a directory, and not a package.
         var isDirectory: Bool = false
@@ -28,7 +30,13 @@ extension QueryItem {
         /// The relative path to open. when not exist, the file / folder would be opened / shown.
         var relativePath: String = ""
         
+        @transient
         var filters: [Regex<Substring>] = []
+        
+        
+        mutating func postDecodeHandler() throws {
+            try self.updateFilters()
+        }
         
         
         mutating func updateFilters() throws {
@@ -57,54 +65,8 @@ extension QueryItem {
             return false
         }
         
-        
-        internal init(isDirectory: Bool = false,
-                      isEnabled: Bool = false,
-                      includeFolder: Bool = true,
-                      includeFile: Bool = false,
-                      enumeration: Bool = true,
-                      relativePath: String = "",
-                      filterBy: String = "") {
-            self.isDirectory = isDirectory
-            self.isEnabled = isEnabled
-            self.includeFolder = includeFolder
-            self.includeFile = includeFile
-            self.enumeration = enumeration
-            self.relativePath = relativePath
-            self.filterBy = filterBy
-        }
-        
-        enum CodingKeys: CodingKey {
-            case isDirectory
-            case isEnabled
-            case includeFolder
-            case includeFile
-            case enumeration
-            case filterBy
-            case relativePath
-        }
-        
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: QueryItem.ChildOptions.CodingKeys.self)
-            try container.encode(self.isDirectory, forKey: QueryItem.ChildOptions.CodingKeys.isDirectory)
-            try container.encode(self.isEnabled, forKey: QueryItem.ChildOptions.CodingKeys.isEnabled)
-            try container.encode(self.includeFolder, forKey: QueryItem.ChildOptions.CodingKeys.includeFolder)
-            try container.encode(self.includeFile, forKey: QueryItem.ChildOptions.CodingKeys.includeFile)
-            try container.encode(self.enumeration, forKey: QueryItem.ChildOptions.CodingKeys.enumeration)
-            try container.encode(self.relativePath, forKey: QueryItem.ChildOptions.CodingKeys.relativePath)
-            try container.encode(self.filterBy, forKey: QueryItem.ChildOptions.CodingKeys.filterBy)
-        }
-        
-        init(from decoder: Decoder) throws {
-            let container: KeyedDecodingContainer<QueryItem.ChildOptions.CodingKeys> = try decoder.container(keyedBy: QueryItem.ChildOptions.CodingKeys.self)
-            self.isDirectory = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.isDirectory)
-            self.isEnabled = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.isEnabled)
-            self.includeFolder = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.includeFolder)
-            self.includeFile = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.includeFile)
-            self.enumeration = try container.decode(Bool.self, forKey: QueryItem.ChildOptions.CodingKeys.enumeration)
-            self.relativePath = try container.decodeIfPresent(String.self, forKey: QueryItem.ChildOptions.CodingKeys.relativePath) ?? ""
-            self.filterBy = try container.decodeIfPresent(String.self, forKey: QueryItem.ChildOptions.CodingKeys.filterBy) ?? ""
-            
+        /// The post decode action which will be called at the end of auto generated `init(from:)` by the `codable` macro.
+        mutating func postDecodeAction() throws {
             try self.updateFilters()
         }
         

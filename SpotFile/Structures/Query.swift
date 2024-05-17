@@ -7,9 +7,11 @@
 
 import Foundation
 import SwiftUI
+import StratumMacros
 
 
-struct Query: Codable, Identifiable {
+@codable
+struct Query: Identifiable {
     
     let id = UUID()
     
@@ -21,6 +23,7 @@ struct Query: Codable, Identifiable {
     
     /// the returned components are NOT lowercased
     @ObservationIgnored
+    @transient
     var components: [Component] = []
     
     var mustIncludeFirstKeyword: Bool
@@ -197,21 +200,8 @@ struct Query: Codable, Identifiable {
     
     // MARK: - Coding & Initializers
     
-    enum CodingKeys: CodingKey {
-        case content
-        case mustIncludeFirstKeyword
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.content, forKey: .content)
-        try container.encode(mustIncludeFirstKeyword, forKey: .mustIncludeFirstKeyword)
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.content = try container.decode(String.self, forKey: .content)
-        self.mustIncludeFirstKeyword = try container.decode(Bool.self, forKey: .mustIncludeFirstKeyword)
+    /// The post decode action which will be called at the end of auto generated `init(from:)` by the `codable` macro.
+    mutating func postDecodeAction() throws {
         self.updateComponents()
     }
     

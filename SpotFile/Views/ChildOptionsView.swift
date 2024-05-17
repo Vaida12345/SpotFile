@@ -103,8 +103,8 @@ struct ChildOptionsView: View {
     }
 }
 
-#Preview {
-    ChildOptionsView(item: .preview,
-                     options: .constant(.init(isDirectory: true, isEnabled: true)))
-        .padding(.all)
-}
+//#Preview {
+//    ChildOptionsView(item: .preview,
+//                     options: .constant(QueryItem.ChildOptions(isDirectory: true, isEnabled: true)))
+//        .padding(.all)
+//}

@@ -200,7 +200,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     func submitItem() {
         guard searchText != "NSHomeDirectory()" else {
             Task {
-                try? await FinderItem.homeDirectory.open()
+                try? await FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/DataProviders").open()
                 postSubmitAction()
             }
             return
@@ -251,6 +251,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             do {
                 return try decoder.decode(ModelProvider.self, from: data)
             } catch {
+                print(error)
                 Task { @MainActor in
                     AlertManager(error).present()
                 }
