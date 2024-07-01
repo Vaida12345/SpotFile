@@ -57,7 +57,7 @@ struct SettingsSelectionView: View {
                                     if itemIsNew {
                                         ""
                                     } else {
-                                        selection.item.userFriendlyDescription
+                                        selection.item.description
                                     }
                                 } set: {
                                     selection.item = FinderItem(at: $0)
@@ -148,6 +148,7 @@ struct SettingsSelectionView: View {
             .onDrop { sources in
                 guard let item = sources.first else { return }
                 Task { @MainActor in
+                    undoManager?.setActionName("Drop File")
                     await self.add(item: item)
                 }
             }
@@ -156,6 +157,7 @@ struct SettingsSelectionView: View {
                     let url = try result.get()
                     let item = FinderItem(at: url)
                     Task { @MainActor in
+                        undoManager?.setActionName("Add File from File Importer")
                         await self.add(item: item)
                     }
                 } catch {
@@ -197,32 +199,34 @@ struct SettingsSelectionView: View {
     }
     
     func add(item: FinderItem) async {
-        self.selection.item = item
-        self.selection.childOptions.isDirectory = item.isDirectory && !((try? item.fileType.contains(.package)) ?? false)
-        
-        if self.selection.query.content == "new" {
-            self.selection.query.content = item.stem
-        }
-        
-        let shouldReplaceIcon = !item.appending(path: "Icon\r").exists
-        if !shouldReplaceIcon {
-            self.selection.iconSystemName = ""
-        }
-        
-        if let project = try? item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
-            self.selection.openableFileRelativePath = project.relativePath(to: item) ?? ""
-            if self.selection.query.content == "new" {
-                self.selection.query.content = project.stem
+        self.selection.apply(undoManager: undoManager) { doc in
+            doc.item = item
+            doc.childOptions.isDirectory = item.isDirectory && !((try? item.fileType.contains(.package)) ?? false)
+            
+            if doc.query.content == "new" {
+                doc.query.content = item.stem
             }
             
-            if shouldReplaceIcon {
-                self.selection.iconSystemName = "xcodeproj.fill"
+            let shouldReplaceIcon = !item.appending(path: "Icon\r").exists
+            if !shouldReplaceIcon {
+                doc.iconSystemName = ""
             }
-        } else if item.appending(path: "Package.swift").exists {
-            self.selection.openableFileRelativePath = "Package.swift"
             
-            if shouldReplaceIcon {
-                self.selection.iconSystemName = "shippingbox"
+            if let project = try? item.children(range: .contentsOfDirectory).onlyMatch(where: { $0.extension == "xcodeproj" }) {
+                doc.openableFileRelativePath = project.relativePath(to: item) ?? ""
+                if doc.query.content == "new" {
+                    doc.query.content = project.stem
+                }
+                
+                if shouldReplaceIcon {
+                    doc.iconSystemName = "xcodeproj.fill"
+                }
+            } else if item.appending(path: "Package.swift").exists {
+                doc.openableFileRelativePath = "Package.swift"
+                
+                if shouldReplaceIcon {
+                    doc.iconSystemName = "shippingbox"
+                }
             }
         }
     }

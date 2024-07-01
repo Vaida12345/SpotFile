@@ -47,9 +47,7 @@ extension QueryItemProtocol {
                 Image(systemName: self.iconSystemName)
             }
         } else {
-            AsyncView {
-                try await self.item.preview(size: .square(64))
-            } content: { result in
+            AsyncView(generator: makeSmallPreview) { result in
                 Image(nativeImage: result)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -74,9 +72,7 @@ extension QueryItemProtocol {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 50, height: 50)
         } else {
-            AsyncView {
-                try await self.item.preview(size: .square(128))
-            } content: { result in
+            AsyncView(generator: makeLargePreview) { result in
                 Image(nativeImage: result)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -84,6 +80,14 @@ extension QueryItemProtocol {
             .id(self.item)
             .frame(width: 50, height: 50)
         }
+    }
+    
+    private nonisolated func makeLargePreview() async throws -> NSImage {
+        try await self.item.preview(size: .square(128))
+    }
+    
+    private nonisolated func makeSmallPreview() async throws -> NSImage {
+        try await self.item.preview(size: .square(64))
     }
     
     
@@ -104,8 +108,12 @@ extension QueryItemProtocol {
         updateRecords(query)
         withErrorPresented {
             let path = item
-            try path.reveal()
-            postSubmitAction()
+            Task { @MainActor in
+                try path.reveal()
+                Task {
+                    postSubmitAction()
+                }
+            }
         }
     }
     

@@ -55,6 +55,20 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         return nil
     }
     
+    func copy() -> QueryItem {
+        QueryItem(query: self.query, item: item, openableFileRelativePath: openableFileRelativePath, iconSystemName: iconSystemName, openedRecords: openedRecords, childOptions: childOptions, additionalQueries: additionalQueries)
+    }
+    
+    func copy(from source: QueryItem) {
+        self.query = source.query
+        self.item  = source.item
+        self.openableFileRelativePath  = source.openableFileRelativePath
+        self.iconSystemName  = source.iconSystemName
+        self.openedRecords  = source.openedRecords
+        self.childOptions  = source.childOptions
+        self.additionalQueries  = source.additionalQueries
+    }
+    
     
     struct Match {
         
@@ -81,5 +95,35 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     static func new() -> QueryItem {
         QueryItem(query: "new", item: .homeDirectory, openableFileRelativePath: "")
+    }
+    
+    func set<T>(_ keyPath: ReferenceWritableKeyPath<QueryItem, T>, to newValue: T, undoManager: UndoManager?) {
+        let oldValue = self[keyPath: keyPath]
+        
+        self[keyPath: keyPath] = newValue
+        
+        undoManager?.registerUndo(withTarget: self) { object in
+            object[keyPath: keyPath] = oldValue
+        }
+    }
+    
+    func apply(undoManager: UndoManager?, action: (_ doc: QueryItem) -> Void) {
+        let oldCopy = self.copy()
+        action(self)
+        
+        undoManager?.registerUndo(withTarget: self) { doc in
+            doc.replace(with: oldCopy, undoManager: undoManager)
+        }
+    }
+    
+    func replace(with copy: QueryItem, undoManager: UndoManager?) {
+        let oldCopy = self.copy()
+        self.copy(from: copy)
+        
+        undoManager?.setActionName("Replace Item")
+        
+        undoManager?.registerUndo(withTarget: self) { doc in
+            doc.replace(with: oldCopy, undoManager: undoManager)
+        }
     }
 }
