@@ -64,7 +64,7 @@ struct SettingsSelectionView: View {
                                 })
                                 .onSubmit {
                                     guard selection.item.exists else {
-                                        AlertManager(title: "The file does not exist", message: "Please paste your path again.").present()
+                                        AlertManager("The file does not exist", message: "Please paste your path again.").present()
                                         return
                                     }
                                     focusedState = .relativePath

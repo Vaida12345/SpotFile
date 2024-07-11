@@ -28,27 +28,37 @@ struct SearchResultItem: View {
     
     @State private var updatePopoverTask: Task<Void, any Error> = Task { }
     
+    private var isSelected: Bool {
+        index == modelProvider.selectionIndex
+    }
     
-    @ViewBuilder
-    var help: some View {
-        if !item.openableFileRelativePath.isEmpty,
+    private var relativePath: (folder: String, name: Substring)? {
+        if isSelected,
+           !item.openableFileRelativePath.isEmpty,
            let name = item.openableFileRelativePath.components(separatedBy: "/").last,
            let _item = modelProvider.previous.matches.first,
            let relative = item.item.relativePath(to: _item.item) {
             let folder = relative.dropLast(name.count + 1)
-            if folder.isEmpty {
+            if !folder.isEmpty {
+                return (name, folder)
+            }
+        }
+        
+        return nil
+    }
+    
+    
+    @ViewBuilder
+    var help: some View {
+        if let (name, folder) = relativePath {
+            VStack(alignment: .leading, spacing: 0) {
                 Text(name)
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(name)
-                        .fontWeight(.semibold)
-                        .fontWeight(.medium)
-                    Text(folder)
-                        .lineSpacing(0)
-                        .font(.callout)
-                        .opacity(0.9)
-                        .fontWeight(.light)
-                }
+                    .fontWeight(.medium)
+                Text(folder)
+                    .lineSpacing(0)
+                    .font(.callout)
+                    .opacity(0.9)
+                    .fontWeight(.light)
             }
         } else {
             Text(item.openableFileRelativePath)
@@ -57,8 +67,6 @@ struct SearchResultItem: View {
     
     
     var body: some View {
-        let isSelected = index == modelProvider.selectionIndex
-        
         HStack {
             Group {
                 if let item = item as? QueryItem {
@@ -97,9 +105,7 @@ struct SearchResultItem: View {
             
             if isSelected {
                 Button {
-                    withErrorPresented {
-                        item.reveal(query: modelProvider.searchText)
-                    }
+                    item.reveal(query: modelProvider.searchText)
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
@@ -128,7 +134,7 @@ struct SearchResultItem: View {
         .padding(.leading, 7)
         .padding(.vertical, 2.5)
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 25)
+        .frame(height: relativePath != nil ? 35 : 25)
         .background(isSelected ? Color.accentColor : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .onHover { hovering in
@@ -168,6 +174,12 @@ struct SearchResultItem: View {
 
 #Preview {
     SearchResultItem(index: 0, item: QueryItem.preview, match: .init(text: Text("here"), isPrimary: true))
+        .environment(ModelProvider.preview)
+        .frame(width: 200)
+}
+
+#Preview {
+    SearchResultItem(index: 0, item: QueryItemChild.preview, match: .init(text: Text("here"), isPrimary: true))
         .environment(ModelProvider.preview)
         .frame(width: 200)
 }

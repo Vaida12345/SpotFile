@@ -63,7 +63,7 @@ struct ChildOptionsView: View {
                                         try options.updateFilters()
                                     } catch {
                                         self.options.filterBy = ""
-                                        AlertManager(title: "Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
+                                        AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
                                     }
                                 }
                                 .focused($isFocused)
@@ -72,7 +72,7 @@ struct ChildOptionsView: View {
                                         try options.updateFilters()
                                     } catch {
                                         self.options.filterBy = ""
-                                        AlertManager(title: "Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
+                                        AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
                                     }
                                 }
                         }

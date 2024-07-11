@@ -43,13 +43,15 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
     
     var iconSystemName: String { "" }
     
-    func updateRecords(_ query: String) { }
+    @ObservationIgnored
+    var openedRecords: [String: Int] = [:]
     
     
     init(parent: any QueryItemProtocol, filename: String) {
         self.parent = parent
         self.openableFileRelativePath = filename
     }
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.openableFileRelativePath)
@@ -60,5 +62,7 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
         self.openableFileRelativePath = try container.decode(String.self)
         self.parent = nil
     }
+    
+    static let preview = QueryItemChild(parent: QueryItem.preview, filename: "folder/file.png")
     
 }

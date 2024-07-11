@@ -40,6 +40,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     var isSearching = false
     
     
+    func reset() {
+        self.selectionIndex = 0
+        self.shownStartIndex = 0
+    }
+    
     func updateSearches() {
         print("searching for \"\(searchText)\"")
         guard !searchText.isEmpty else {
@@ -139,7 +144,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 self.searchText
             }
             
-            let _matches: [(any QueryItemProtocol, QueryItem.Match)]
+            var _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
                 print("can use last result")
                 _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
@@ -156,6 +161,14 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 print("cannot use last result, using search text \"\(searchText)\"")
                 _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
             }
+            
+            _matches = _matches.sorted(on: {
+                if $0.0.query.content.lowercased() == searchText.lowercased() {
+                    return Int.max
+                } else {
+                    return ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.content.count)
+                }
+            }, by: >)
             
             previous.childrenMatches = _matches.map(\.0)
             
@@ -236,6 +249,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             self.parentQuery = nil
         }
         
+        static var preview: PreviousState {
+            let state = PreviousState()
+            state.matches.append(QueryItem.preview)
+            return state
+        }
+        
     }
     
     
@@ -263,10 +282,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }()
     
     
-    static let preview = ModelProvider(items: [.preview])
+    static let preview = ModelProvider(items: [.preview], previous: .preview)
     
-    private init(items: [QueryItem] = []) {
+    private init(items: [QueryItem] = [], previous: PreviousState = PreviousState()) {
         self.items = items
+        self.previous = previous
     }
     
     enum CodingKeys: CodingKey {

@@ -67,7 +67,7 @@ struct SuggestionTextField: NSViewRepresentable {
             let text = self.searchField.stringValue
             if text.isEmpty {
                 modelProvider.previous.reset()
-                modelProvider.selectionIndex = 0
+                modelProvider.reset()
                 modelProvider.matches.removeAll()
             }
             modelProvider.searchText = text

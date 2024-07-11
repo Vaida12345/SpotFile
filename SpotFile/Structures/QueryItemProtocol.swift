@@ -23,12 +23,16 @@ protocol QueryItemProtocol: AnyObject, UndoTracking {
     
     var iconSystemName: String { get }
     
-    func updateRecords(_ query: String)
+    var openedRecords: [String: Int] { get set }
     
 }
 
 
 extension QueryItemProtocol {
+    
+    func updateRecords(_ query: String) {
+        self.openedRecords[query, default: 0] += 1
+    }
     
     // MARK: - Views
     
@@ -106,8 +110,8 @@ extension QueryItemProtocol {
     
     func reveal(query: String) {
         updateRecords(query)
-        withErrorPresented {
-            let path = item
+        withErrorPresented("Cannot open reveal file") {
+            let path = self.item
             Task { @MainActor in
                 try path.reveal()
                 Task {
@@ -122,7 +126,7 @@ extension QueryItemProtocol {
         let item = self.item
         let openableFileRelativePath = self.openableFileRelativePath
         Task {
-            await withErrorPresented {
+            await withErrorPresented("Cannot open the file") {
                 let path: FinderItem
                 
                 if self is QueryItem {

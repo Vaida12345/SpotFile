@@ -34,10 +34,6 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     var additionalQueries: [Query] = []
     
-    func updateRecords(_ query: String) {
-        self.openedRecords[query, default: 0] += 1
-    }
-    
     
     // MARK: - Handling matches
     
@@ -91,7 +87,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     static let preview = QueryItem(query: "swift testRoom",
                                    item: FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Swift/testRoom/testRoom"),
-                                   openableFileRelativePath: "testRoom.xcodeproj")
+                                   openableFileRelativePath: "testRoom/folder/testRoom.xcodeproj")
     
     static func new() -> QueryItem {
         QueryItem(query: "new", item: .homeDirectory, openableFileRelativePath: "")
