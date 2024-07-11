@@ -68,20 +68,7 @@ struct SearchResultItem: View {
     
     var body: some View {
         HStack {
-            Group {
-                if let item = item as? QueryItem {
-                    item.smallIconView(isSelected: isSelected)
-                        .frame(width: 20, height: 20)
-                } else if let item = item as? QueryItemChild {
-                    item.smallIconView(isSelected: isSelected)
-                        .frame(width: 20, height: 20)
-                } else {
-                    Rectangle()
-                        .fill(.clear)
-                        .frame(width: 20, height: 20)
-                }
-            }
-            .frame(width: 20, height: 20)
+            IconView(item: item, scale: .small, isSelected: isSelected)
             
             if isSelected && item is QueryItemChild {
                 help

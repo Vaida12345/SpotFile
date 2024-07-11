@@ -34,7 +34,7 @@ struct SettingsSelectionView: View {
                 ScrollView {
                     VStack {
                         HStack {
-                            selection.iconView
+                            IconView(item: selection, scale: .small, isSelected: true)
                             
                             TextField("", text: $selection.query.content)
                                 .font(.title)
