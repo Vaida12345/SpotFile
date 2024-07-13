@@ -10,6 +10,7 @@ import Stratum
 import SwiftUI
 import UniformTypeIdentifiers
 import ConcurrentStream
+import SwiftData
 
 
 @Observable
@@ -25,11 +26,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     @ObservationIgnored
     var previous = PreviousState()
     
-    var searchText: String = "" {
-        didSet {
-            updateSearches()
-        }
-    }
+    var searchText: String = ""
     
     var selectionIndex: Int = 0
     
@@ -45,7 +42,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         self.shownStartIndex = 0
     }
     
-    func updateSearches() {
+    func updateSearches(context: ModelContext) {
         print("searching for \"\(searchText)\"")
         guard !searchText.isEmpty else {
             previous.reset()
@@ -162,13 +159,24 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
             }
             
-            _matches = _matches.sorted(on: {
-                if $0.0.query.content.lowercased() == searchText.lowercased() {
-                    return Int.max
-                } else {
-                    return ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.content.count)
-                }
-            }, by: >)
+            
+            let search = String(searchText.dropFirst(while: { $0.isWhitespace }))
+            if !search.isEmpty {
+                let parentID = previous.matches.first!.id
+                
+                let models = try context.fetch(FetchDescriptor<QueryChildRecord>(predicate: #Predicate { $0.parentID == parentID })).filter({ search.starts(with: $0.query) })
+                
+                _matches = _matches.sorted(on: { match in
+                    if match.0.query.content.lowercased() == searchText.lowercased() {
+                        return Int.max
+                    } else {
+                        let _models = models.filter({ $0.relativePath == match.0.openableFileRelativePath })
+                        let maxMatch = _models.map(\.count).max() ?? 0
+                        print(match, maxMatch)
+                        return maxMatch << 32 | (Int(UInt32.max) - match.0.query.content.count)
+                    }
+                }, by: >)
+            }
             
             previous.childrenMatches = _matches.map(\.0)
             
@@ -210,7 +218,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }
     
     
-    func submitItem() {
+    func submitItem(context: ModelContext) {
         guard searchText != "NSHomeDirectory()" else {
             Task {
                 try? await FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/DataProviders").open()
@@ -219,12 +227,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             return
         }
         guard selectionIndex < self.matches.count else { return }
-        self.matches[selectionIndex].1.open(query: self.searchText)
+        self.matches[selectionIndex].1.open(query: self.searchText, context: context)
     }
     
-    func revealItem() {
+    func revealItem(context: ModelContext) {
         guard selectionIndex < self.matches.count else { return }
-        self.matches[selectionIndex].1.reveal(query: self.searchText)
+        self.matches[selectionIndex].1.reveal(query: self.searchText, context: context)
     }
     
     

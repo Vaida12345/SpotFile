@@ -8,12 +8,16 @@
 import Foundation
 import AppKit
 import SwiftUI
+import SwiftData
+
 
 // original code from https://developer.apple.com/library/archive/samplecode/CustomMenus
 
 struct SuggestionTextField: NSViewRepresentable {
     
     let modelProvider: ModelProvider
+    
+    let context: ModelContext
     
     
     func makeNSView(context: Context) -> NSSearchField {
@@ -47,16 +51,19 @@ struct SuggestionTextField: NSViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        return Coordinator(modelProvider: modelProvider)
+        return Coordinator(modelProvider: modelProvider, context: context)
     }
     
     final class Coordinator: NSObject, NSSearchFieldDelegate {
         
         let modelProvider: ModelProvider
         
+        let context: ModelContext
         
-        init(modelProvider: ModelProvider) {
+        
+        init(modelProvider: ModelProvider, context: ModelContext) {
             self.modelProvider = modelProvider
+            self.context = context
         }
         
         var searchField: NSSearchField!
@@ -71,6 +78,7 @@ struct SuggestionTextField: NSViewRepresentable {
                 modelProvider.matches.removeAll()
             }
             modelProvider.searchText = text
+            modelProvider.updateSearches(context: context)
         }
         
         @objc func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -97,7 +105,7 @@ struct SuggestionTextField: NSViewRepresentable {
                 
                 return true
             } else if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                modelProvider.submitItem()
+                modelProvider.submitItem(context: context)
                 
                 return true
             } else {

@@ -9,13 +9,14 @@ import Foundation
 import Stratum
 import SwiftUI
 import StratumMacros
+import SwiftData
 
 
 @Observable
 @codable
 final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
-    let id: UUID = UUID()
+    var id: UUID
     
     var query: Query
     
@@ -37,6 +38,10 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     
     // MARK: - Handling matches
     
+    func updateRecords(_ query: String, context: ModelContext) {
+        self.openedRecords[query, default: 0] += 1
+    }
+    
     func match(query: String) -> Match? {
         if let match = self.query.match(query: query, isChild: false) {
             return Match(text: match, isPrimary: true)
@@ -52,10 +57,11 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     }
     
     func copy() -> QueryItem {
-        QueryItem(query: self.query, item: item, openableFileRelativePath: openableFileRelativePath, iconSystemName: iconSystemName, openedRecords: openedRecords, childOptions: childOptions, additionalQueries: additionalQueries)
+        QueryItem(id: self.id, query: self.query, item: item, openableFileRelativePath: openableFileRelativePath, iconSystemName: iconSystemName, openedRecords: openedRecords, childOptions: childOptions, additionalQueries: additionalQueries)
     }
     
     func copy(from source: QueryItem) {
+        self.id = source.id
         self.query = source.query
         self.item  = source.item
         self.openableFileRelativePath  = source.openableFileRelativePath
@@ -78,6 +84,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     // MARK: - Initializers, static values
     
     init(query: String, item: FinderItem, openableFileRelativePath: String) {
+        self.id = UUID()
         self.query = Query(value: query)
         self.item = item
         self.openableFileRelativePath = openableFileRelativePath

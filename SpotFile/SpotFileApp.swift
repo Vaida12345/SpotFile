@@ -7,6 +7,8 @@
 
 import SwiftUI
 import Stratum
+import SwiftData
+
 
 @main
 struct SpotFileApp: App {
@@ -15,12 +17,16 @@ struct SpotFileApp: App {
     
     @Environment(\.dismissWindow) private var dismissWindow
     
+    let modelContainer = try! ModelContainer(for: QueryChildRecord.self, configurations: ModelConfiguration(url: URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/default.store")))
+    
+    
     var body: some Scene {
         MenuBarExtra {
             ContentView()
                 .background(.ultraThinMaterial)
                 .environment(modelProvider)
                 .environmentObject(applicationDelegate)
+                .modelContainer(modelContainer)
         } label: {
             Image("SpotFile")
                 .imageScale(.large)
@@ -31,6 +37,7 @@ struct SpotFileApp: App {
         Window("Settings", id: "configuration") {
             SettingsView()
                 .environment(modelProvider)
+                .modelContainer(modelContainer)
         }
         .commands {
             CommandGroup(replacing: .saveItem) {

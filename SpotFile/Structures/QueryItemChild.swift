@@ -7,6 +7,8 @@
 
 import Foundation
 import Stratum
+import SwiftData
+import OSLog
 
 
 final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
@@ -31,6 +33,7 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
         self.parent.item.appending(path: openableFileRelativePath)
     }
     
+    /// The top level QueryItem parent.
     var queryItem: QueryItem {
         if let parent = parent as? QueryItem {
             return parent
@@ -43,8 +46,27 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
     
     var iconSystemName: String { "" }
     
-    @ObservationIgnored
-    var openedRecords: [String: Int] = [:]
+    
+    func updateRecords(_ query: String, context: ModelContext) {
+        let parentID = self.queryItem.id
+        let search = String(query.dropFirst(while: { $0.isWhitespace }))
+        
+        do {
+            let relativePath = self.openableFileRelativePath
+            let models = try context.fetch(FetchDescriptor<QueryChildRecord>(predicate: #Predicate { $0.parentID == parentID && $0.relativePath == relativePath })).filter({ search.starts(with: $0.query) })
+            if !models.isEmpty {
+                assert(models.count == 1)
+                models[0].count += 1
+            } else {
+                context.insert(QueryChildRecord(parentID: parentID, query: search, relativePath: self.openableFileRelativePath, count: 1))
+            }
+        } catch {
+            let logger = Logger(subsystem: "SpotFile", category: "updateRecords")
+            logger.error("updateRecords encountered error: \(error)")
+        }
+        
+        try! context.save()
+    }
     
     
     init(parent: any QueryItemProtocol, filename: String) {

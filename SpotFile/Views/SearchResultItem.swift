@@ -21,6 +21,8 @@ struct SearchResultItem: View {
     
     @Environment(\.colorScheme) private var colorScheme
     
+    @Environment(\.modelContext) private var modelContext
+    
     
     @State private var hovering = false
     
@@ -92,7 +94,7 @@ struct SearchResultItem: View {
             
             if isSelected {
                 Button {
-                    item.reveal(query: modelProvider.searchText)
+                    item.reveal(query: modelProvider.searchText, context: modelContext)
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
@@ -131,15 +133,15 @@ struct SearchResultItem: View {
             if modelProvider.selectionIndex != index {
                 modelProvider.selectionIndex = index
             } else {
-                item.open(query: modelProvider.searchText)
+                item.open(query: modelProvider.searchText, context: modelContext)
             }
         }
         .contextMenu {
             Button("Open") {
-                item.open(query: modelProvider.searchText)
+                item.open(query: modelProvider.searchText, context: modelContext)
             }
             Button("Show in Enclosing Folder") {
-                item.reveal(query: modelProvider.searchText)
+                item.reveal(query: modelProvider.searchText, context: modelContext)
             }
             
             Divider()

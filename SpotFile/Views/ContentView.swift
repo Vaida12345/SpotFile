@@ -15,13 +15,15 @@ struct ContentView: View {
     
     @EnvironmentObject private var appDelegate: SpotFileApp.ApplicationDelegate
     
+    @Environment(\.modelContext) private var modelContext
+    
     
     @State private var isSyncing = false
     
     
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            SuggestionTextField(modelProvider: modelProvider)
+            SuggestionTextField(modelProvider: modelProvider, context: modelContext)
                 .autocorrectionDisabled()
             
             if modelProvider.searchText.isEmpty {

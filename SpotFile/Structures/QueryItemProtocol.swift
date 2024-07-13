@@ -9,6 +9,7 @@
 import SwiftUI
 import Stratum
 import ViewCollection
+import SwiftData
 
 
 protocol QueryItemProtocol: AnyObject, UndoTracking {
@@ -23,16 +24,12 @@ protocol QueryItemProtocol: AnyObject, UndoTracking {
     
     var iconSystemName: String { get }
     
-    var openedRecords: [String: Int] { get set }
+    func updateRecords(_ query: String, context: ModelContext)
     
 }
 
 
 extension QueryItemProtocol {
-    
-    func updateRecords(_ query: String) {
-        self.openedRecords[query, default: 0] += 1
-    }
     
     
     // MARK: - Handling matches
@@ -48,8 +45,8 @@ extension QueryItemProtocol {
     
     // MARK: - File Operations
     
-    func reveal(query: String) {
-        updateRecords(query)
+    func reveal(query: String, context: ModelContext) {
+        updateRecords(query, context: context)
         withErrorPresented("Cannot open reveal file") {
             let path = self.item
             Task { @MainActor in
@@ -61,8 +58,8 @@ extension QueryItemProtocol {
         }
     }
     
-    func open(query: String) {
-        updateRecords(query)
+    func open(query: String, context: ModelContext) {
+        updateRecords(query, context: context)
         let item = self.item
         let openableFileRelativePath = self.openableFileRelativePath
         Task {
