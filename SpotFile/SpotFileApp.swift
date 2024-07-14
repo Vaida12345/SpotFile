@@ -72,9 +72,7 @@ struct SpotFileApp: App {
         
         func windowWillClose(_ notification: Notification) {
             NSApp.setActivationPolicy(.accessory)
-            Task.detached {
-                try? ModelProvider.instance.save()
-            }
+            try? ModelProvider.instance.save()
         }
     }
 #endif

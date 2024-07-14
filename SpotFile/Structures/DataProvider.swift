@@ -32,6 +32,7 @@ public protocol DataProvider: Codable, Identifiable {
     /// The main ``DataProvider`` to work with.
     ///
     /// In the `@main App` declaration, declare a `StateObject` of `instance`. In this way, this structure can be accessed across the app, and any mutation is observed in all views.
+    @MainActor
     static var instance: Self { get set }
     
 }
@@ -40,7 +41,7 @@ public protocol DataProvider: Codable, Identifiable {
 extension DataProvider {
     
     /// The path indicating the location where this ``DataProvider`` is persisted on disk.
-    public static var storageLocation: URL {
+    public static nonisolated var storageLocation: URL {
         let dataProviderDirectory = URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/DataProviders")
         try! FinderItem(at: dataProviderDirectory).makeDirectory()
         return dataProviderDirectory.appendingPathComponent("/\(Self.self).plist", conformingTo: .propertyList)
@@ -48,7 +49,7 @@ extension DataProvider {
     
     /// Save the encoded provider to ``storageItem`` using `.plist`.
     @inlinable
-    public func save() throws {
+    public nonisolated func save() throws {
         let date = Date()
         defer { print("Save data provider took \(date.distanceToNow())") }
         let encoder = PropertyListEncoder()

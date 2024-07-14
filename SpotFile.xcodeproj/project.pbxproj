@@ -186,8 +186,8 @@
 				B474D9752B8EA20800A3EA7C /* QueryItemProtocol.swift */,
 				B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */,
 				B474D97B2B8EA3A500A3EA7C /* QueryItemChild.swift */,
-				B4AFB64A2C43871D0082164C /* GotToItem.swift */,
 				B4A6A75C2BF718FF007973EA /* ChildOptions.swift */,
+				B4AFB64A2C43871D0082164C /* GotToItem.swift */,
 				B46EBD1B2B9587660037D797 /* Query.swift */,
 				B4DE34912B6F58C200BB752B /* ModelProvider.swift */,
 				B48B96A62B6F591800FCC2C4 /* DataProvider.swift */,
@@ -445,6 +445,8 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -501,6 +503,8 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -530,7 +534,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = Vaida.app.SpotFile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
+				_EXPERIMENTAL_SWIFT_EXPLICIT_MODULES = NO;
 			};
 			name = Debug;
 		};
@@ -560,7 +566,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = Vaida.app.SpotFile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
+				_EXPERIMENTAL_SWIFT_EXPLICIT_MODULES = NO;
 			};
 			name = Release;
 		};

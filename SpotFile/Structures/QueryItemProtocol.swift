@@ -51,9 +51,8 @@ extension QueryItemProtocol {
             let path = self.item
             Task { @MainActor in
                 try path.reveal()
-                Task {
-                    postSubmitAction()
-                }
+                
+                try postSubmitAction()
             }
         }
     }
@@ -62,23 +61,23 @@ extension QueryItemProtocol {
         updateRecords(query, context: context)
         let item = self.item
         let openableFileRelativePath = self.openableFileRelativePath
-        Task {
-            await withErrorPresented("Cannot open the file") {
-                let path: FinderItem
-                
-                if let child = self as? QueryItemChild {
-                    let _item = child.queryItem
-                    if item.appending(path: _item.childOptions.relativePath).exists {
-                        path = item.appending(path: _item.childOptions.relativePath)
-                    } else {
-                        path = item
-                    }
+        withErrorPresented("Cannot open the file") {
+            let path: FinderItem
+            
+            if let child = self as? QueryItemChild {
+                let _item = child.queryItem
+                if item.appending(path: _item.childOptions.relativePath).exists {
+                    path = item.appending(path: _item.childOptions.relativePath)
                 } else {
-                    path = item.appending(path: openableFileRelativePath)
+                    path = item
                 }
-                
+            } else {
+                path = item.appending(path: openableFileRelativePath)
+            }
+            
+            Task {
                 try await path.open()
-                postSubmitAction()
+                try await postSubmitAction()
             }
         }
     }
@@ -91,13 +90,10 @@ private let emphasizedAttributeContainer = {
     return container
 }()
 
-func postSubmitAction() {
-    Task { @MainActor in
-        NSApp.hide(nil)
-        ModelProvider.instance.searchText = ""
-    }
+@MainActor
+func postSubmitAction() throws {
+    NSApp.hide(nil)
+    ModelProvider.instance.searchText = ""
     
-    Task.detached {
-        try ModelProvider.instance.save()
-    }
+    try ModelProvider.instance.save()
 }

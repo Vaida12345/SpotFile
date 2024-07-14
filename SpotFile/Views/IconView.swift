@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ViewCollection
+import FinderItem
 
 
 struct IconView: View {
@@ -16,6 +17,10 @@ struct IconView: View {
     let scale: Scale
     
     let isSelected: Bool
+    
+    var finderItem: FinderItem {
+        item.item
+    }
     
     @Environment(\.displayScale) private var displayScale
     
@@ -36,14 +41,14 @@ struct IconView: View {
                 }
             } else {
                 AsyncDrawnImage(generator: makePreview, frame: .square(scale.side))
-                    .id(item.item)
+                    .id(finderItem)
             }
         }
         .frame(width: scale.side, height: scale.side)
     }
     
     private nonisolated func makePreview() async -> CGImage? {
-        try? await item.item.preview(size: .square(scale.side * displayScale)).cgImage
+        try? await finderItem.preview(size: .square(scale.side * displayScale)).cgImage
     }
     
     

@@ -63,6 +63,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         let previousSearchText = previous.searchText
         nonisolated(unsafe)
         let context = context
+        nonisolated(unsafe)
+        let items = items
         
         isSearching = true
         self.selectionIndex = 0
@@ -72,7 +74,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         previous.task = Task.detached {
             func onComplete() {
-                logger.trace("searching \"\(self.searchText)\" completed within \(_startDate.distanceToNow())")
+                logger.trace("searching \"\(searchText)\" completed within \(_startDate.distanceToNow())")
                 
                 previous.searchText = searchText
                 previous.task = nil
@@ -88,7 +90,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             }
             try Task.checkCancellation()
             
-            let total = !previousSearchText.isEmpty && canUseLastResult ? previous.matches : self.items
+            let total = !previousSearchText.isEmpty && canUseLastResult ? previous.matches : items
             
             let itemsMatches: [(QueryItem, QueryItem.Match)] = if previous.parentQuery != nil {
                 []
@@ -96,7 +98,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 try await total.stream.compactMap { item in
                     try Task.checkCancellation()
                     
-                    if let string = item.match(query: self.searchText) {
+                    if let string = item.match(query: searchText) {
                         return (item, string)
                     } else {
                         return nil
@@ -128,13 +130,13 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         }
                     }
                     
-                    if self.searchText.starts(with: "/") {
-                        set(goto: self.searchText)
-                    } else if self.searchText.starts(with: "~") {
-                        set(goto: self.searchText.replacing(/^~/, with: NSHomeDirectory()))
-                    } else if self.searchText.hasPrefix("file:") {
-                        set(goto: "/" + self.searchText.dropFirst(5).dropFirst(while: { $0 == "/" }))
-                    } else if "NSHomeDirectory()".starts(with: self.searchText) {
+                    if searchText.starts(with: "/") {
+                        set(goto: searchText)
+                    } else if searchText.starts(with: "~") {
+                        set(goto: searchText.replacing(/^~/, with: NSHomeDirectory()))
+                    } else if searchText.hasPrefix("file:") {
+                        set(goto: "/" + searchText.dropFirst(5).dropFirst(while: { $0 == "/" }))
+                    } else if "NSHomeDirectory()".starts(with: searchText) {
                         let item = FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support")
                         
                         Task { @MainActor in
@@ -185,9 +187,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 previous.parentQuery = previous.searchText
             }
             let searchText = if isInitial {
-                String(self.searchText.dropFirst(previous.searchText.count))
+                String(searchText.dropFirst(previous.searchText.count))
             } else {
-                self.searchText
+                searchText
             }
             
             var _matches: [(any QueryItemProtocol, QueryItem.Match)]
@@ -237,7 +239,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         }
     }
     
-    private func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
+    private nonisolated func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
         try Task.checkCancellation()
         
         // if `item` matches
@@ -311,6 +313,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     /// The main ``DataProvider`` to work with.
     ///
     /// This structure can be accessed across the app, and any mutations are observed in all views.
+    @MainActor
     static var instance: ModelProvider = {
         print(ModelProvider.storageLocation)
         do {
@@ -332,7 +335,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }()
     
     
-    static let preview = ModelProvider(items: [.preview], previous: .preview)
+    static var preview: ModelProvider {
+        ModelProvider(items: [.preview], previous: .preview)
+    }
     
     private init(items: [QueryItem] = [], previous: PreviousState = PreviousState()) {
         self.items = items

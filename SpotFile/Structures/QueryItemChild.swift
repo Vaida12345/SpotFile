@@ -89,6 +89,8 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStri
         self.parent = nil
     }
     
-    static let preview = QueryItemChild(parent: QueryItem.preview, filename: "folder/file.png")
+    static var preview: QueryItemChild {
+        QueryItemChild(parent: QueryItem.preview, filename: "folder/file.png")
+    }
     
 }

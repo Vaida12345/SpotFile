@@ -103,9 +103,11 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringCon
     
     static let separators: [Character] = ["_", "/"]
     
-    static let preview = QueryItem(query: "swift testRoom",
-                                   item: FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Swift/testRoom/testRoom"),
-                                   openableFileRelativePath: "testRoom/folder/testRoom.xcodeproj")
+    static var preview: QueryItem {
+        QueryItem(query: "swift testRoom",
+                  item: FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Swift/testRoom/testRoom"),
+                  openableFileRelativePath: "testRoom/folder/testRoom.xcodeproj")
+    }
     
     static func new() -> QueryItem {
         QueryItem(query: "new", item: .homeDirectory, openableFileRelativePath: "")
