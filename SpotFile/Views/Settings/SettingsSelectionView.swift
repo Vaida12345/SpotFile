@@ -24,6 +24,8 @@ struct SettingsSelectionView: View {
     
     @Environment(\.colorScheme) private var colorScheme
     
+    @Environment(\.modelContext) private var modelContext
+    
     
     var body: some View {
         @Bindable var selection = selection
@@ -174,6 +176,10 @@ struct SettingsSelectionView: View {
                 HStack {
                     Button {
                         modelProvider.remove(selection, from: \.items, undoManager: undoManager)
+                        
+                        withErrorPresented("Delete \"\(selection.query)\" encountered error") {
+                            try modelContext.delete(model: QueryChildRecord.self, where: #Predicate { $0.parentID == selection.id })
+                        }
                     } label: {
                         Image(systemName: "trash")
                             .symbolRenderingMode(.multicolor)

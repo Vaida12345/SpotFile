@@ -157,10 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				B47C28552B6F257E006BB7FE /* ContentView.swift */,
-				B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */,
-				B4B20B8F2B807D9200A469DB /* SettingsSelectionView.swift */,
-				B46EBD1D2B95B4340037D797 /* SettingsSelectionInspector.swift */,
-				B474D97D2B8EABC100A3EA7C /* ChildOptionsView.swift */,
+				B4AFB6492C437CDB0082164C /* Settings */,
 				B43EA8802B81A2F500568440 /* SearchResultView.swift */,
 				B4515B2E2B81D7D70032D032 /* SearchResultItem.swift */,
 				B4B9540B2C3FE443006CBCD7 /* IconView.swift */,
@@ -168,6 +165,17 @@
 				B43EA8822B81AC0F00568440 /* TextFieldView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		B4AFB6492C437CDB0082164C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */,
+				B4B20B8F2B807D9200A469DB /* SettingsSelectionView.swift */,
+				B46EBD1D2B95B4340037D797 /* SettingsSelectionInspector.swift */,
+				B474D97D2B8EABC100A3EA7C /* ChildOptionsView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		B4FAF3F22B6F3A0100DBC07E /* Structures */ = {

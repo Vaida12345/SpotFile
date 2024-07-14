@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Stratum
+import SwiftData
 
 struct SettingsView: View {
     
