@@ -35,17 +35,15 @@ struct IconView: View {
                     Image(systemName: item.iconSystemName)
                 }
             } else {
-                AsyncView(generator: makePreview) { result in
-                    AsyncDrawnImage(nativeImage: result, frame: .square(scale.side))
-                }
-                .id(item.item)
+                AsyncDrawnImage(generator: makePreview, frame: .square(scale.side))
+                    .id(item.item)
             }
         }
         .frame(width: scale.side, height: scale.side)
     }
     
-    private nonisolated func makePreview() async throws -> NSImage {
-        try await item.item.preview(size: .square(scale.side * displayScale))
+    private nonisolated func makePreview() async -> CGImage? {
+        try? await item.item.preview(size: .square(scale.side * displayScale)).cgImage
     }
     
     

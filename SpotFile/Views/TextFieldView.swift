@@ -73,13 +73,13 @@ struct SuggestionTextField: NSViewRepresentable {
         
         func controlTextDidChange(_ notification: Notification) {
             let text = self.searchField.stringValue
+            
             if text.isEmpty {
-                modelProvider.previous.reset()
                 modelProvider.reset()
-                modelProvider.matches.removeAll()
+            } else {
+                modelProvider.searchText = text
+                modelProvider.updateSearches(context: context)
             }
-            modelProvider.searchText = text
-            modelProvider.updateSearches(context: context)
         }
         
         func controlTextDidEndEditing(_ obj: Notification) {
@@ -105,8 +105,9 @@ struct SuggestionTextField: NSViewRepresentable {
                 }
                 return true // always consume
             } else if commandSelector == #selector(NSResponder.complete(_:)) ||
-                commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-                modelProvider.searchText = ""
+                commandSelector == #selector(NSResponder.cancelOperation(_:)) ||
+                commandSelector == #selector(NSResponder.deleteToBeginningOfLine(_:)) {
+                modelProvider.reset()
                 
                 return true
             } else if commandSelector == #selector(NSResponder.insertNewline(_:)) {

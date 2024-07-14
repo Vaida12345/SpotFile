@@ -11,6 +11,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import ConcurrentStream
 import SwiftData
+import OSLog
 
 
 @Observable
@@ -38,37 +39,41 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     
     func reset() {
+        self.searchText.removeAll()
         self.selectionIndex = 0
         self.shownStartIndex = 0
+        self.isSearching = false
+        
+        self.previous.reset()
+        self.matches.removeAll()
     }
     
     func updateSearches(context: ModelContext) {
-        print("searching for \"\(searchText)\"")
-        guard !searchText.isEmpty else {
-            previous.reset()
-            selectionIndex = 0
-            matches.removeAll()
-            return
-        }
+        guard !searchText.isEmpty else { self.reset(); return }
         
+        let logger = Logger(subsystem: "app.Vaida.spotFile", category: #function)
+        let _startDate = Date()
+        logger.trace("start to search for \"\(self.searchText)\"")
+        
+        nonisolated(unsafe)
         let previous = previous // cross actor.
+        nonisolated(unsafe)
+        let searchText = searchText
+        nonisolated(unsafe)
+        let previousSearchText = previous.searchText
+        nonisolated(unsafe)
+        let context = context
         
         isSearching = true
-        let searchText = searchText
-        let previousSearchText = previous.searchText
         self.selectionIndex = 0
         
         let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
         previous.task?.cancel()
         
         previous.task = Task.detached {
-            let date = Date()
-            print("updateSearches(\(searchText)) enter @\(Date().timeIntervalSinceReferenceDate)")
-            defer {
-                print("updateSearches(\(searchText)) exit @\(Date().timeIntervalSinceReferenceDate)\n")
-            }
             func onComplete() {
-                print("updateSearches(\(searchText)) took: \(date.distanceToNow())")
+                logger.trace("searching \"\(self.searchText)\" completed within \(_startDate.distanceToNow())")
+                
                 previous.searchText = searchText
                 previous.task = nil
                 
@@ -105,10 +110,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }, by: >)
             }
             
-            print(itemsMatches)
-            
             func exitWithoutDeepSearch() {
-                print("is not deep search, exit with previous match count: \(previous.matches.count)")
+                logger.trace("not perform deep search, exit with current match count: \(itemsMatches.count), previous match count: \(previous.matches.count)")
                 
                 var matchesIsUpdated = false
                 if itemsMatches.isEmpty {
@@ -129,6 +132,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         set(goto: self.searchText)
                     } else if self.searchText.starts(with: "~") {
                         set(goto: self.searchText.replacing(/^~/, with: NSHomeDirectory()))
+                    } else if self.searchText.hasPrefix("file:") {
+                        set(goto: "/" + self.searchText.dropFirst(5).dropFirst(while: { $0 == "/" }))
                     } else if "NSHomeDirectory()".starts(with: self.searchText) {
                         let item = FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support")
                         
@@ -137,6 +142,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         }
                         
                         matchesIsUpdated = true
+                    }
+                    
+                    if matchesIsUpdated {
+                        logger.trace("assumed input of \"\(searchText)\" is file path.")
+                    } else {
+                        logger.trace("will exit without finding any match")
                     }
                 }
                 
@@ -181,7 +192,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             var _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
-                print("can use last result")
+                logger.trace("deep search: can use last result")
                 _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
                     for child in previous.childrenMatches {
                         guard group.addTaskUnlessCancelled(operation: {
@@ -193,7 +204,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }
             } else {
                 // cannot use last result
-                print("cannot use last result, using search text \"\(searchText)\"")
+                logger.trace("deep search: cannot use last result, use search text: \(searchText)")
                 _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
             }
             
