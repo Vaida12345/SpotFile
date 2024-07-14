@@ -66,16 +66,17 @@ extension QueryItemProtocol {
             await withErrorPresented("Cannot open the file") {
                 let path: FinderItem
                 
-                if self is QueryItem {
-                    path = item.appending(path: openableFileRelativePath)
-                } else {
-                    let _item = (self as! QueryItemChild).queryItem
+                if let child = self as? QueryItemChild {
+                    let _item = child.queryItem
                     if item.appending(path: _item.childOptions.relativePath).exists {
                         path = item.appending(path: _item.childOptions.relativePath)
                     } else {
                         path = item
                     }
+                } else {
+                    path = item.appending(path: openableFileRelativePath)
                 }
+                
                 try await path.open()
                 postSubmitAction()
             }

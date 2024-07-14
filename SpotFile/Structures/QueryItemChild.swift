@@ -11,7 +11,7 @@ import SwiftData
 import OSLog
 
 
-final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
+final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStringConvertible {
     
     let id = UUID()
     
@@ -45,6 +45,10 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol {
     let openableFileRelativePath: String
     
     var iconSystemName: String { "" }
+    
+    var description: String {
+        "QueryItemChild<parent: \(self.queryItem), relative: \(self.openableFileRelativePath)>"
+    }
     
     
     func updateRecords(_ query: String, context: ModelContext) {

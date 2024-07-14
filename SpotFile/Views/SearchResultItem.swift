@@ -123,7 +123,7 @@ struct SearchResultItem: View {
         .padding(.leading, 7)
         .padding(.vertical, 2.5)
         .frame(maxWidth: .infinity)
-        .frame(height: relativePath != nil ? 35 : 25)
+        .frame(height: (relativePath != nil || !match.isPrimary) ? 35 : 25)
         .background(isSelected ? Color.accentColor : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .onHover { hovering in

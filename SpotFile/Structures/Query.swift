@@ -11,7 +11,7 @@ import StratumMacros
 
 
 @codable
-struct Query: Identifiable {
+struct Query: Identifiable, CustomStringConvertible {
     
     let id = UUID()
     
@@ -27,6 +27,10 @@ struct Query: Identifiable {
     var components: [Component] = []
     
     var mustIncludeFirstKeyword: Bool
+    
+    var description: String {
+        self.content
+    }
     
     
     mutating func updateComponents() {

@@ -14,7 +14,7 @@ import SwiftData
 
 @Observable
 @codable
-final class QueryItem: Codable, Identifiable, QueryItemProtocol {
+final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringConvertible {
     
     var id: UUID
     
@@ -72,11 +72,22 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
     }
     
     
-    struct Match {
+    struct Match: CustomStringConvertible {
         
         let text: Text
         
+        /// Whether the primary name is matched, instead of alternative names.
         let isPrimary: Bool
+        
+        
+        var description: String {
+            let regex = /(?:SwiftUI\.)?Text\(storage: SwiftUI\.Text\.Storage\.anyTextStorage\(.*?: "(.*?)"\), modifiers: \[\]\)/
+            if let match = "\(self.text)".wholeMatch(of: regex) {
+                return String(match.output.1)
+            } else {
+                return "\(self.text)"
+            }
+        }
         
     }
     
@@ -128,5 +139,9 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol {
         undoManager?.registerUndo(withTarget: self) { doc in
             doc.replace(with: oldCopy, undoManager: undoManager)
         }
+    }
+    
+    var description: String {
+        "QueryItem<query: \(self.query)>"
     }
 }

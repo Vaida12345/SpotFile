@@ -22,6 +22,7 @@ struct SuggestionTextField: NSViewRepresentable {
     
     func makeNSView(context: Context) -> NSSearchField {
         let searchField = NSSearchField(frame: .zero)
+        searchField.maximumRecents = 0
         searchField.controlSize = .regular
         searchField.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: searchField.controlSize))
         searchField.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(rawValue: 1), for: .horizontal)
@@ -70,7 +71,7 @@ struct SuggestionTextField: NSViewRepresentable {
         
         // MARK: - NSSearchField Delegate Methods
         
-        @objc func controlTextDidChange(_ notification: Notification) {
+        func controlTextDidChange(_ notification: Notification) {
             let text = self.searchField.stringValue
             if text.isEmpty {
                 modelProvider.previous.reset()
@@ -81,7 +82,11 @@ struct SuggestionTextField: NSViewRepresentable {
             modelProvider.updateSearches(context: context)
         }
         
-        @objc func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        func controlTextDidEndEditing(_ obj: Notification) {
+            modelProvider.submitItem(context: context)
+        }
+        
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
             if commandSelector == #selector(NSResponder.moveUp(_:)) {
                 if modelProvider.selectionIndex > 0 {
                     modelProvider.selectionIndex -= 1

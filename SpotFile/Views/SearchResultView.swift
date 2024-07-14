@@ -16,6 +16,7 @@ struct SearchResultView: View {
             if modelProvider.previous.parentQuery != nil {
                 if let item = modelProvider.previous.matches.first {
                     HStack {
+                        IconView(item: item, scale: .small, isSelected: false)
                         
                         Text(item.query.content)
                             .bold()

@@ -105,30 +105,68 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }, by: >)
             }
             
-            Task { @MainActor in
-                self.matches = itemsMatches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
-            }
-            try Task.checkCancellation()
+            print(itemsMatches)
             
-            guard itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())})) else {
+            func exitWithoutDeepSearch() {
                 print("is not deep search, exit with previous match count: \(previous.matches.count)")
+                
+                var matchesIsUpdated = false
+                if itemsMatches.isEmpty {
+                    func set(goto: String) {
+                        let item = FinderItem(at: goto)
+                        let itemIsExist = item.exists
+                        
+                        if itemIsExist {
+                            Task { @MainActor in
+                                self.matches = [(0, GoToItem(item: item, iconSystemName: ""), QueryItem.Match(text: Text("goto: ") + Text(item.name).bold(), isPrimary: true))]
+                            }
+                            
+                            matchesIsUpdated = true
+                        }
+                    }
+                    
+                    if self.searchText.starts(with: "/") {
+                        set(goto: self.searchText)
+                    } else if self.searchText.starts(with: "~") {
+                        set(goto: self.searchText.replacing(/^~/, with: NSHomeDirectory()))
+                    } else if "NSHomeDirectory()".starts(with: self.searchText) {
+                        let item = FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support")
+                        
+                        Task { @MainActor in
+                            self.matches = [(0, GoToItem(item: item, iconSystemName: "house"), QueryItem.Match(text: Text("goto: ") + Text(self.searchText).bold() + Text("NSHomeDirectory()".dropFirst(self.searchText.count)), isPrimary: true))]
+                        }
+                        
+                        matchesIsUpdated = true
+                    }
+                }
+                
+                if !matchesIsUpdated {
+                    Task { @MainActor in
+                        self.matches = itemsMatches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                    }
+                }
+                
                 previous.matches = itemsMatches.map(\.0)
                 previous.childrenMatches = []
                 previous.parentQuery = nil
                 onComplete()
+            }
+            
+            guard itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())})) else {
+                exitWithoutDeepSearch()
                 return
             }
+            try Task.checkCancellation()
+            
             if previous.matches.count > 1 {
                 previous.matches = [previous.matches.first(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased()) })!]
             }
             
             guard (previous.matches.first?.childOptions.isEnabled ?? false) && (searchText.hasPrefix(" ") || searchText.hasSuffix(" ")) else {
-                previous.matches = itemsMatches.map(\.0)
-                previous.childrenMatches = []
-                previous.parentQuery = nil
-                onComplete()
+                exitWithoutDeepSearch()
                 return
             }
+            try Task.checkCancellation()
             
             var isInitial: Bool = false
             if previous.parentQuery == nil {
@@ -219,13 +257,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     
     func submitItem(context: ModelContext) {
-        guard searchText != "NSHomeDirectory()" else {
-            Task {
-                try? await FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/DataProviders").open()
-                postSubmitAction()
-            }
-            return
-        }
         guard selectionIndex < self.matches.count else { return }
         self.matches[selectionIndex].1.open(query: self.searchText, context: context)
     }

@@ -21,24 +21,27 @@ struct IconView: View {
     
     
     var body: some View {
-        if !item.iconSystemName.isEmpty {
-            if item.iconSystemName == "xcodeproj" {
-                Image(.xcodeproj)
-                    .imageScale(.large)
-                    .foregroundStyle(isSelected ? .white : .blue)
-            } else if item.iconSystemName == "xcodeproj.fill" {
-                Image(.xcodeprojFill)
-                    .imageScale(.large)
-                    .foregroundStyle(isSelected ? .white : .blue)
+        Group {
+            if !item.iconSystemName.isEmpty {
+                if item.iconSystemName == "xcodeproj" {
+                    Image(.xcodeproj)
+                        .imageScale(.large)
+                        .foregroundStyle(isSelected ? .white : .blue)
+                } else if item.iconSystemName == "xcodeproj.fill" {
+                    Image(.xcodeprojFill)
+                        .imageScale(.large)
+                        .foregroundStyle(isSelected ? .white : .blue)
+                } else {
+                    Image(systemName: item.iconSystemName)
+                }
             } else {
-                Image(systemName: item.iconSystemName)
+                AsyncView(generator: makePreview) { result in
+                    AsyncDrawnImage(nativeImage: result, frame: .square(scale.side))
+                }
+                .id(item.item)
             }
-        } else {
-            AsyncView(generator: makePreview) { result in
-                AsyncDrawnImage(nativeImage: result, frame: .square(scale.side))
-            }
-            .id(item.item)
         }
+        .frame(width: scale.side, height: scale.side)
     }
     
     private nonisolated func makePreview() async throws -> NSImage {
