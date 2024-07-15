@@ -71,15 +71,17 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
         previous.task?.cancel()
+        // Can now safely discard the previous task. As before the task could make any changes, on the main actor, it must had checked for cancelation. During execution, no suspension point was provided, hence such transaction would be completed before the next one can run.
         
         previous.task = Task.detached {
-            func onComplete() {
+            func onComplete() async throws {
                 logger.trace("searching \"\(searchText)\" completed within \(_startDate.distanceToNow())")
                 
                 previous.searchText = searchText
                 previous.task = nil
                 
-                Task { @MainActor in
+                try await MainActor.run {
+                    try Task.checkCancellation()
                     self.isSearching = false
                 }
             }
@@ -112,17 +114,18 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }, by: >)
             }
             
-            func exitWithoutDeepSearch() {
+            func exitWithoutDeepSearch() async throws {
                 logger.trace("not perform deep search, exit with current match count: \(itemsMatches.count), previous match count: \(previous.matches.count)")
                 
                 var matchesIsUpdated = false
                 if itemsMatches.isEmpty {
-                    func set(goto: String) {
+                    func set(goto: String) async throws {
                         let item = FinderItem(at: goto)
                         let itemIsExist = item.exists
                         
                         if itemIsExist {
-                            Task { @MainActor in
+                            try await MainActor.run {
+                                try Task.checkCancellation()
                                 self.matches = [(0, GoToItem(item: item, iconSystemName: ""), QueryItem.Match(text: Text("goto: ") + Text(item.name).bold(), isPrimary: true))]
                             }
                             
@@ -131,15 +134,16 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                     }
                     
                     if searchText.starts(with: "/") {
-                        set(goto: searchText)
+                        try await set(goto: searchText)
                     } else if searchText.starts(with: "~") {
-                        set(goto: searchText.replacing(/^~/, with: NSHomeDirectory()))
+                        try await set(goto: searchText.replacing(/^~/, with: NSHomeDirectory()))
                     } else if searchText.hasPrefix("file:") {
-                        set(goto: "/" + searchText.dropFirst(5).dropFirst(while: { $0 == "/" }))
+                        try await set(goto: "/" + searchText.dropFirst(5).dropFirst(while: { $0 == "/" }))
                     } else if "NSHomeDirectory()".starts(with: searchText) {
                         let item = FinderItem.homeDirectory.appending(path: "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support")
                         
-                        Task { @MainActor in
+                        try await MainActor.run {
+                            try Task.checkCancellation()
                             self.matches = [(0, GoToItem(item: item, iconSystemName: "house"), QueryItem.Match(text: Text("goto: ") + Text(self.searchText).bold() + Text("NSHomeDirectory()".dropFirst(self.searchText.count)), isPrimary: true))]
                         }
                         
@@ -154,7 +158,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }
                 
                 if !matchesIsUpdated {
-                    Task { @MainActor in
+                    try await MainActor.run {
+                        try Task.checkCancellation()
                         self.matches = itemsMatches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
                     }
                 }
@@ -162,11 +167,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 previous.matches = itemsMatches.map(\.0)
                 previous.childrenMatches = []
                 previous.parentQuery = nil
-                onComplete()
+                try await onComplete()
             }
             
             guard itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())})) else {
-                exitWithoutDeepSearch()
+                try await exitWithoutDeepSearch()
                 return
             }
             try Task.checkCancellation()
@@ -176,7 +181,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             }
             
             guard (previous.matches.first?.childOptions.isEnabled ?? false) && (searchText.hasPrefix(" ") || searchText.hasSuffix(" ")) else {
-                exitWithoutDeepSearch()
+                try await exitWithoutDeepSearch()
                 return
             }
             try Task.checkCancellation()
@@ -195,15 +200,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             var _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
                 logger.trace("deep search: can use last result")
-                _matches = try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
-                    for child in previous.childrenMatches {
-                        guard group.addTaskUnlessCancelled(operation: {
-                            try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText)
-                        }) else { return [] }
-                    }
-                    
-                    return try await group.allObjects().flatten()
-                }
+                _matches = try await previous.childrenMatches.stream.map { child in
+                    try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText)
+                }.flatten().sequence
             } else {
                 // cannot use last result
                 logger.trace("deep search: cannot use last result, use search text: \(searchText)")
@@ -223,7 +222,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                     } else {
                         let _models = models.filter({ $0.relativePath == match.0.openableFileRelativePath })
                         let maxMatch = _models.map(\.count).max() ?? 0
-                        print(match, maxMatch)
                         return maxMatch << 32 | (Int(UInt32.max) - match.0.query.content.count)
                     }
                 }, by: >)
@@ -232,14 +230,31 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             previous.childrenMatches = _matches.map(\.0)
             
             let __matches = _matches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
-            Task { @MainActor in
+            try await MainActor.run {
+                try Task.checkCancellation()
                 self.matches = __matches
             }
-            onComplete()
+            try await onComplete()
         }
     }
     
-    private nonisolated func _recursiveMatch(_ item: any QueryItemProtocol, childOptions: QueryItem.ChildOptions, searchText: String) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
+    
+    /// Explicitly make async to wait for fileI/O.
+    private nonisolated static func checkFileType(item: FinderItem) async -> Bool {
+        !((try? item.fileType.contains(.package)) ?? false)
+    }
+    private nonisolated static func checkIfFileIsIncluded(child: FinderItem, childOptions: QueryItem.ChildOptions) async -> Bool {
+        (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile)
+    }
+    private nonisolated static func getChildStream(item: FinderItem) async throws -> some ConcurrentStream<FinderItem, Never> {
+        try item.children(range: .contentsOfDirectory).stream
+    }
+    
+    private nonisolated func _recursiveMatch(
+        _ item: any QueryItemProtocol,
+        childOptions: QueryItem.ChildOptions,
+        searchText: String
+    ) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
         try Task.checkCancellation()
         
         // if `item` matches
@@ -252,20 +267,13 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             }
         }
         
-        guard !((try? item.item.fileType.contains(.package)) ?? false) else { return [] }
-        try Task.checkCancellation()
+        guard await ModelProvider.checkFileType(item: item.item) else { return [] }
         
-        return try await withThrowingTaskGroup(of: [(any QueryItemProtocol, QueryItem.Match)].self) { group in
-            for child in try item.item.children(range: .contentsOfDirectory) {
-                guard (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile) else { continue }
-                guard group.addTaskUnlessCancelled(operation: {
-                    let queryChild = QueryItemChild(parent: item, filename: child.name)
-                    return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText)
-                }) else { return [] }
-            }
-            
-            return try await group.allObjects().flatten()
-        }
+        return try await ModelProvider.getChildStream(item: item.item).map { (child) -> [(any QueryItemProtocol, QueryItem.Match)] in
+            guard await ModelProvider.checkIfFileIsIncluded(child: child, childOptions: childOptions) else { return [] }
+            let queryChild = QueryItemChild(parent: item, filename: child.name)
+            return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText)
+        }.flatten().sequence
     }
     
     
