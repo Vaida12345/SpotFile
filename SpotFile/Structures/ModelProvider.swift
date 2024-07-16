@@ -65,6 +65,8 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         let context = context
         nonisolated(unsafe)
         let items = items
+        nonisolated(unsafe)
+        let matches = matches
         
         isSearching = true
         self.selectionIndex = 0
@@ -94,13 +96,13 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             let total = !previousSearchText.isEmpty && canUseLastResult ? previous.matches : items
             
+            let __fetch_date = Date()
+            
             let itemsMatches: [(QueryItem, QueryItem.Match)] = if previous.parentQuery != nil {
                 []
             } else {
                 try await total.stream.compactMap { item in
-                    try Task.checkCancellation()
-                    
-                    if let string = try await ModelProvider._check(item: item, searchText: searchText, context: context) {
+                    if let string = try await ModelProvider._check(item: item, searchText: searchText) {
                         return (item, string)
                     } else {
                         return nil
@@ -114,8 +116,14 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }, by: >)
             }
             
+            print("Fetch changes in", __fetch_date.distanceToNow())
+            
             func exitWithoutDeepSearch() async throws {
                 logger.trace("not perform deep search for \"\(searchText)\", exit with current match count: \(itemsMatches.count), previous match count: \(previous.matches.count)")
+                let __exit_date = Date()
+                defer {
+                    print("exit in", __exit_date.distanceToNow())
+                }
                 
                 var matchesIsUpdated = false
                 if itemsMatches.isEmpty {
@@ -158,10 +166,20 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }
                 
                 if !matchesIsUpdated {
-                    try await MainActor.run {
-                        try Task.checkCancellation()
-                        self.matches = itemsMatches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                    let _matches = itemsMatches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
+                    let date = Date()
+                    
+                    if _matches.map(\.2) != matches.map(\.2) {
+                        try await MainActor.run {
+                            let date = Date()
+                            
+                            try Task.checkCancellation()
+                            self.matches = _matches
+                            print("push changes to main actor in -> inner body", date.distanceToNow())
+                        }
                     }
+                    
+                    print("push changes to main actor in", date.distanceToNow())
                 }
                 
                 previous.matches = itemsMatches.map(\.0)
@@ -201,12 +219,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             if !previous.childrenMatches.isEmpty && canUseLastResult {
                 logger.trace("deep search: can use last result")
                 _matches = try await previous.childrenMatches.stream.map { child in
-                    try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText, context: context)
+                    try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText)
                 }.flatten().sequence
             } else {
                 // cannot use last result
                 logger.trace("deep search: cannot use last result, use search text: \(searchText)")
-                _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText, context: context)
+                _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
             }
             
             
@@ -250,48 +268,21 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         try item.children(range: .contentsOfDirectory).stream
     }
     
-    private nonisolated static func _check(item: some QueryItemProtocol, searchText: String, context: ModelContext) async throws -> QueryItem.Match? {
-//        return item.match(query: searchText)
-        
-        let content = item.query.content
-        var fetch = FetchDescriptor<UnmatchedSearch>(predicate: #Predicate { $0.query == content })
-        fetch.fetchLimit = 1
-        let unmatchedPrefix = try await MainActor.run {
-            try context.fetch(fetch)
-        }
-        
-        if let unmatch = unmatchedPrefix.first,
-            unmatch.unmatchedPrefixes.prefixes.contains(where: { searchText.starts(with: $0) }) {
-            return nil
-        }
-        
-        if let match = item.match(query: searchText) {
-            return match
-        } else {
-            Task { @MainActor in
-                if let unmatch = unmatchedPrefix.first {
-                    unmatch.unmatchedPrefixes.prefixes.append(content)
-                } else {
-                    context.insert(UnmatchedSearch(query: content, unmatchedPrefixes: UnmatchedSearch.UnmatchedPrefixes(prefixes: [searchText])))
-                }
-            }
-            
-            return nil
-        }
+    private nonisolated static func _check(item: some QueryItemProtocol, searchText: String) async throws -> QueryItem.Match? {
+        item.match(query: searchText)
     }
     
     private nonisolated func _recursiveMatch(
         _ item: any QueryItemProtocol,
         childOptions: QueryItem.ChildOptions,
-        searchText: String,
-        context: ModelContext
+        searchText: String
     ) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
         try Task.checkCancellation()
         
         // if `item` matches
         if !(item is QueryItem) {
             // the actual matching
-            if childOptions.filterContains(item.item.name), let match = try await ModelProvider._check(item: item, searchText: searchText, context: context) {
+            if childOptions.filterContains(item.item.name), let match = try await ModelProvider._check(item: item, searchText: searchText) {
                 return [(item, match)]
             } else if !childOptions.enumeration {
                 return [] // ends here
@@ -303,7 +294,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         return try await ModelProvider.getChildStream(item: item.item).map { (child) -> [(any QueryItemProtocol, QueryItem.Match)] in
             guard await ModelProvider.checkIfFileIsIncluded(child: child, childOptions: childOptions) else { return [] }
             let queryChild = QueryItemChild(parent: item, filename: child.name)
-            return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText, context: context)
+            return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText)
         }.flatten().sequence
     }
     

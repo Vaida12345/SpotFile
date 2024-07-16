@@ -19,8 +19,6 @@ struct SpotFileApp: App {
     
     let modelContainer = try! ModelContainer(
         for: QueryChildRecord.self,
-        UnmatchedSearch.self,
-        UnmatchedSearch.UnmatchedPrefixes.self,
         configurations: ModelConfiguration(url: URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/default.store"))
     )
     

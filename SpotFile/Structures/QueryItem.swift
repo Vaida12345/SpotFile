@@ -72,7 +72,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringCon
     }
     
     
-    struct Match: CustomStringConvertible {
+    struct Match: CustomStringConvertible, Equatable {
         
         let text: Text
         
