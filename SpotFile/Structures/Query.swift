@@ -33,7 +33,7 @@ struct Query: Identifiable, CustomStringConvertible {
     }
     
     
-    mutating func updateComponents() {
+    private mutating func updateComponents() {
         self.components = Query.component(for: self.content)
     }
     

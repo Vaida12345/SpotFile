@@ -17,8 +17,12 @@ struct SpotFileApp: App {
     
     @Environment(\.dismissWindow) private var dismissWindow
     
-    let modelContainer = try! ModelContainer(for: QueryChildRecord.self, configurations: ModelConfiguration(url: URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/default.store")))
-    
+    let modelContainer = try! ModelContainer(
+        for: QueryChildRecord.self,
+        UnmatchedSearch.self,
+        UnmatchedSearch.UnmatchedPrefixes.self,
+        configurations: ModelConfiguration(url: URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/default.store"))
+    )
     
     var body: some Scene {
         MenuBarExtra {
