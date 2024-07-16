@@ -37,7 +37,6 @@ struct SuggestionTextField: NSViewRepresentable {
         return searchField
     }
     
-    @MainActor
     func updateNSView(_ searchField: NSSearchField, context: Context) {
         if let prefix = modelProvider.previous.parentQuery,
             modelProvider.searchText.hasPrefix(prefix) {

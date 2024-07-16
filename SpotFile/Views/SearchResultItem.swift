@@ -26,10 +26,6 @@ struct SearchResultItem: View {
     
     @State private var hovering = false
     
-    @State private var showPopover = false
-    
-    @State private var updatePopoverTask: Task<Void, any Error> = Task { }
-    
     private var isSelected: Bool {
         index == modelProvider.selectionIndex
     }
@@ -102,21 +98,6 @@ struct SearchResultItem: View {
                 .padding(.trailing, 5)
                 .opacity(hovering ? 0.8 : 0)
                 .keyboardShortcut(.return, modifiers: .command)
-            }
-        }
-        .onChange(of: isSelected) { oldValue, newValue in
-            if newValue {
-                updatePopoverTask = Task {
-                    guard item is QueryItemChild else { return }
-                    try await Task.sleep(for: .seconds(0.5))
-                    
-                    Task { @MainActor in
-                        showPopover = true
-                    }
-                }
-            } else {
-                updatePopoverTask.cancel()
-                showPopover = false
             }
         }
         .foregroundStyle(isSelected ? .white : .primary)
