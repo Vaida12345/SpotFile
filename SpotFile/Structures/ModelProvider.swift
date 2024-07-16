@@ -20,6 +20,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     var items: [QueryItem] = [] {
         didSet {
             selectionIndex = 0
+            shownStartIndex = 0
             matches.removeAll()
         }
     }
@@ -33,7 +34,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     var shownStartIndex: Int = 0
     
-    var matches: [(Int, any QueryItemProtocol, QueryItem.Match)] = []
+    var matches: [(Int, any QueryItemProtocol, QueryItem.Match)] = [] {
+        didSet {
+            selectionIndex = 0
+            shownStartIndex = 0
+        }
+    }
     
     
     func reset() {
@@ -202,6 +208,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 searchText
             }
             
+            let __fetch_children_date = Date()
             var _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
                 logger.trace("deep search: can use last result")
@@ -213,6 +220,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 logger.trace("deep search: cannot use last result, use search text: \(searchText)")
                 _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
             }
+            print("fetch children in ", __fetch_children_date.distanceToNow())
             
             
             let search = String(searchText.dropFirst(while: { $0.isWhitespace }))
