@@ -18,7 +18,7 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStri
     let parent: (any QueryItemProtocol)! // no need unown, wont be circular anyway
     
     
-    var query: Query {
+    lazy var query: Query = {
         if parent is QueryItem {
             Query(value: self.openableFileRelativePath, 
                   mustIncludeFirstKeyword: false)
@@ -27,20 +27,20 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStri
                   mustIncludeFirstKeyword: false,
                   queryComponents: self.parent.query.components + [.spacer("/")] + Query.component(for: self.openableFileRelativePath))
         }
-    }
+    }()
     
-    var item: FinderItem {
+    lazy var item: FinderItem = {
         self.parent.item.appending(path: openableFileRelativePath)
-    }
+    }()
     
     /// The top level QueryItem parent.
-    var queryItem: QueryItem {
+    lazy var queryItem: QueryItem = {
         if let parent = parent as? QueryItem {
             return parent
         } else {
             return (parent as! QueryItemChild).queryItem
         }
-    }
+    }()
     
     let openableFileRelativePath: String
     
