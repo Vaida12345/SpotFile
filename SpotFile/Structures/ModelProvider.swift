@@ -35,14 +35,11 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     var matches: [(Int, any QueryItemProtocol, QueryItem.Match)] = []
     
-    var isSearching = false
-    
     
     func reset() {
         self.searchText.removeAll()
         self.selectionIndex = 0
         self.shownStartIndex = 0
-        self.isSearching = false
         
         self.previous.reset()
         self.matches.removeAll()
@@ -68,7 +65,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         nonisolated(unsafe)
         let matches = matches
         
-        isSearching = true
         self.selectionIndex = 0
         
         let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
@@ -77,15 +73,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         previous.task = Task.detached {
             func onComplete() async throws {
-                logger.trace("searching \"\(searchText)\" completed within \(_startDate.distanceToNow())")
-                
                 previous.searchText = searchText
                 previous.task = nil
                 
-                try await MainActor.run {
-                    try Task.checkCancellation()
-                    self.isSearching = false
-                }
+                logger.trace("searching \"\(searchText)\" completed within \(_startDate.distanceToNow())")
             }
             
             if searchText.count < previousSearchText.count {
@@ -120,10 +111,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             func exitWithoutDeepSearch() async throws {
                 logger.trace("not perform deep search for \"\(searchText)\", exit with current match count: \(itemsMatches.count), previous match count: \(previous.matches.count)")
-                let __exit_date = Date()
-                defer {
-                    print("exit in", __exit_date.distanceToNow())
-                }
                 
                 var matchesIsUpdated = false
                 if itemsMatches.isEmpty {
@@ -170,12 +157,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                     let date = Date()
                     
                     if _matches.map(\.2) != matches.map(\.2) {
+                        let __prepare_main_thread_date = Date()
                         try await MainActor.run {
-                            let date = Date()
+                            print("prepare main thread in", __prepare_main_thread_date.distanceToNow())
                             
                             try Task.checkCancellation()
                             self.matches = _matches
-                            print("push changes to main actor in -> inner body", date.distanceToNow())
                         }
                     }
                     

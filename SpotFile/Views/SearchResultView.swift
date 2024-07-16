@@ -30,11 +30,7 @@ struct SearchResultView: View {
             
             if modelProvider.matches.isEmpty {
                 Group {
-                    if modelProvider.isSearching {
-                        Text("Loading...")
-                    } else {
-                        Text("No result found")
-                    }
+                    Text("No result found")
                 }
                 .bold()
                 .foregroundStyle(.secondary)
