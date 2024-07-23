@@ -60,9 +60,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         nonisolated(unsafe)
         let previous = previous // cross actor.
-        nonisolated(unsafe)
         let searchText = searchText
-        nonisolated(unsafe)
         let previousSearchText = previous.searchText
         nonisolated(unsafe)
         let context = context
