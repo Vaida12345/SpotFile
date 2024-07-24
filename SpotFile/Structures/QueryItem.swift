@@ -42,7 +42,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringCon
         self.openedRecords[query, default: 0] += 1
     }
     
-    func match(query: String) -> Match? {
+    func match(query: String) -> QueryItem.Match? {
         if let match = self.query.match(query: query, isChild: false) {
             return Match(text: match, isPrimary: true)
         }

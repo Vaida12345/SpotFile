@@ -26,6 +26,8 @@ protocol QueryItemProtocol: AnyObject, UndoTracking {
     
     func updateRecords(_ query: String, context: ModelContext)
     
+    func match(query: String) -> QueryItem.Match?
+    
 }
 
 
