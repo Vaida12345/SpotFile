@@ -76,9 +76,15 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         // Can now safely discard the previous task. As before the task could make any changes, on the main actor, it must had checked for cancelation. During execution, no suspension point was provided, hence such transaction would be completed before the next one can run.
         
         previous.task = Task.detached {
-            func onComplete() async throws {
+            @MainActor
+            func onComplete(matches: [QueryItem], childrenMatches: [any QueryItemProtocol], parentQuery: String?) throws {
+                try Task.checkCancellation()
+                
                 previous.searchText = searchText
                 previous.task = nil
+                previous.childrenMatches = childrenMatches
+                previous.parentQuery = parentQuery
+                previous.matches = matches
                 
                 logger.trace("searching \"\(searchText)\" completed within \(_startDate.distanceToNow())")
             }
@@ -173,10 +179,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                     print("push changes to main actor in", date.distanceToNow())
                 }
                 
-                previous.matches = itemsMatches.map(\.0)
-                previous.childrenMatches = []
-                previous.parentQuery = nil
-                try await onComplete()
+                try await MainActor.run {
+                    try onComplete(matches: itemsMatches.map(\.0), childrenMatches: [], parentQuery: nil)
+                }
             }
             
             guard itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())})) else {
@@ -238,14 +243,12 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }, by: >)
             }
             
-            previous.childrenMatches = _matches.map(\.0)
-            
             let __matches = _matches.enumerated().map { ($0.0, $0.1.0, $0.1.1) }
             try await MainActor.run {
                 try Task.checkCancellation()
                 self.matches = __matches
+                try onComplete(matches: previous.matches, childrenMatches: _matches.map(\.0), parentQuery: previous.parentQuery)
             }
-            try await onComplete()
         }
     }
     
