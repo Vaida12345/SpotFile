@@ -320,10 +320,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         func reset() {
             self.task?.cancel()
+            self.task = nil
             self.searchText = ""
             self.matches = []
             self.childrenMatches = []
-            self.task = nil
             self.parentQuery = nil
         }
         

@@ -96,6 +96,7 @@ private let emphasizedAttributeContainer = {
 func postSubmitAction() throws {
     NSApp.hide(nil)
     ModelProvider.instance.searchText = ""
+    ModelProvider.instance.reset()
     
     try ModelProvider.instance.save()
 }
