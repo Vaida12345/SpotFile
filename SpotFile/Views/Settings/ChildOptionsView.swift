@@ -17,6 +17,7 @@ struct ChildOptionsView: View {
     @State private var isUpdating = false
     
     @FocusState private var isFocused: Bool
+    @FocusState private var isRelativePathFocused: Bool
     
     var body: some View {
         if options.isDirectory {
@@ -55,25 +56,14 @@ struct ChildOptionsView: View {
                             
                             TextField(#"/.*∖.app/, /.*∖.txt/"#, text: $options.filterBy)
                                 .multilineTextAlignment(.trailing)
-                                .textFieldStyle(.plain)
                                 .padding(.trailing, 5)
                                 .fontDesign(.monospaced)
                                 .onSubmit {
-                                    do {
-                                        try options.updateFilters()
-                                    } catch {
-                                        self.options.filterBy = ""
-                                        AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
-                                    }
+                                    updateFiltersRegex()
                                 }
                                 .focused($isFocused)
                                 .onChange(of: isFocused) {
-                                    do {
-                                        try options.updateFilters()
-                                    } catch {
-                                        self.options.filterBy = ""
-                                        AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes where emptied.").present()
-                                    }
+                                    updateFiltersRegex()
                                 }
                         }
                         .padding(.top)
@@ -84,8 +74,15 @@ struct ChildOptionsView: View {
                         HStack {
                             Text("Relative Path")
                             
-                            TextField("The executable's relative path to the location of the child", text: $options.relativePath)
+                            TextField("The relative path to the location of the child (Regex supported).", text: $options.plainRelativePath)
                                 .multilineTextAlignment(.trailing)
+                                .focused($isRelativePathFocused)
+                                .onSubmit {
+                                    updateRelativePathRegex()
+                                }
+                                .onChange(of: isRelativePathFocused) {
+                                    updateRelativePathRegex()
+                                }
                         }
                         .padding(.top)
                         
@@ -98,13 +95,32 @@ struct ChildOptionsView: View {
                     }
                 }
                 .multilineTextAlignment(.leading)
+                .textFieldStyle(.plain)
             }
+        }
+    }
+    
+    private func updateRelativePathRegex() {
+        do {
+            try options.updateRelativePath()
+        } catch {
+            options.plainRelativePath = ""
+            AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes were discarded. The error is: \("\(error)")").present()
+        }
+    }
+    
+    private func updateFiltersRegex() {
+        do {
+            try options.updateFilters()
+        } catch {
+            self.options.filterBy = ""
+            AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes were discarded. The error is: \("\(error)")").present()
         }
     }
 }
 
-//#Preview {
-//    ChildOptionsView(item: .preview,
-//                     options: .constant(QueryItem.ChildOptions(isDirectory: true, isEnabled: true)))
-//        .padding(.all)
-//}
+#Preview {
+    ChildOptionsView(item: .preview,
+                     options: .constant(QueryItem.ChildOptions(isDirectory: true, isEnabled: true)))
+        .padding(.all)
+}

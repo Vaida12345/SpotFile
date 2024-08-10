@@ -62,6 +62,9 @@
     "Define what kind of files should be included in search results." : {
 
     },
+    "Disabled as deep search enabled or the given file is not an directory." : {
+
+    },
     "Drop the file here to set its location" : {
 
     },
@@ -69,6 +72,9 @@
 
     },
     "Enable enumeration" : {
+
+    },
+    "Expected \"/\"." : {
 
     },
     "Files" : {
@@ -107,7 +113,10 @@
     "Override Icon" : {
 
     },
-    "Please check your regex expression. The changes where emptied." : {
+    "Parse Filer Error" : {
+
+    },
+    "Please check your regex expression. The changes were discarded. The error is: %@" : {
 
     },
     "Please enter filters in Regex, including the slashes" : {
@@ -149,13 +158,16 @@
     "The executable's relative path to the *location* above" : {
 
     },
-    "The executable's relative path to the location of the child" : {
-
-    },
     "The file does not exist" : {
 
     },
+    "The relative path to %@." : {
+
+    },
     "The relative path to open. When not exist, the file / folder would be opened / shown." : {
+
+    },
+    "The relative path to the location of the child (Regex supported)." : {
 
     },
     "The target location. Note: You can also drop in the file." : {

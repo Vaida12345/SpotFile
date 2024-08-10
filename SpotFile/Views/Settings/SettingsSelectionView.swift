@@ -90,6 +90,9 @@ struct SettingsSelectionView: View {
                                         focusedState = .overrideIcon
                                     }
                             }
+                            .foregroundStyle(!selection.childOptions.isDirectory || selection.childOptions.isEnabled ? .secondary : .primary)
+                            .disabled(!selection.childOptions.isDirectory || selection.childOptions.isEnabled)
+                            .help(!selection.childOptions.isDirectory || selection.childOptions.isEnabled ? "Disabled as deep search enabled or the given file is not an directory." : "The relative path to \(selection.item.description).")
                         }
                         .padding(.top)
                         .multilineTextAlignment(.trailing)

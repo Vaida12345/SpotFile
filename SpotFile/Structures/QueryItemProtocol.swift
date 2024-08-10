@@ -62,18 +62,22 @@ extension QueryItemProtocol {
     func open(query: String, context: ModelContext) {
         updateRecords(query, context: context)
         let item = self.item
-        let openableFileRelativePath = self.openableFileRelativePath
+        
         withErrorPresented("Cannot open the file") {
             let path: FinderItem
             
             if let child = self as? QueryItemChild {
                 let _item = child.queryItem
-                if item.appending(path: _item.childOptions.relativePath).exists {
-                    path = item.appending(path: _item.childOptions.relativePath)
+                
+                if let relativePath = _item.childOptions.relativePath,
+                   let match = try? item.children(range: .enumeration).first(where: {(try? relativePath.wholeMatch(in: $0.relativePath(to: item)!)) != nil }) {
+                    path = match
                 } else {
                     path = item
                 }
             } else {
+                // child doesn't have a `relative path`. As already reflected in `item`.
+                let openableFileRelativePath = self.openableFileRelativePath
                 path = item.appending(path: openableFileRelativePath)
             }
             
