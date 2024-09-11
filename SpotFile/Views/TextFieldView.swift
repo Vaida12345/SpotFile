@@ -114,6 +114,14 @@ struct SuggestionTextField: NSViewRepresentable {
                 modelProvider.submitItem(context: context)
                 
                 return true
+            } else if commandSelector == #selector(NSResponder.insertTab(_:)) {
+                let selection = modelProvider.matches[modelProvider.selectionIndex]
+                if let item = selection.1 as? QueryItem {
+                    modelProvider.searchText = " "
+                    modelProvider.updateSearches(context: context, forceDeepSearch: item)
+                }
+                
+                return true
             } else {
                 return false
             }

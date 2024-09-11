@@ -51,7 +51,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         self.matches.removeAll()
     }
     
-    func updateSearches(context: ModelContext) {
+    func updateSearches(context: ModelContext, forceDeepSearch: QueryItem? = nil) {
         guard !searchText.isEmpty else { self.reset(); return }
         
         let logger = Logger(subsystem: "app.Vaida.spotFile", category: #function)
@@ -184,13 +184,15 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }
             }
             
-            guard itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())})) else {
+            guard (itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())}))) || forceDeepSearch != nil else {
                 try await exitWithoutDeepSearch()
                 return
             }
             try Task.checkCancellation()
             
-            if previous.matches.count > 1 {
+            if let forceDeepSearch {
+                previous.matches = [forceDeepSearch]
+            } else if previous.matches.count > 1 {
                 previous.matches = [previous.matches.first(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased()) })!]
             }
             
@@ -276,22 +278,33 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         try Task.checkCancellation()
         
         // if `item` matches
-        if !(item is QueryItem) {
-            // the actual matching
-            if childOptions.filterContains(item.item.name), let match = try await ModelProvider._check(item: item, searchText: searchText) {
-                return [(item, match)]
-            } else if !childOptions.enumeration {
-                return [] // ends here
+        func match() async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
+            if !(item is QueryItem) {
+                // the actual matching
+                if childOptions.filterContains(item.item.name),
+                   let match = try await ModelProvider._check(item: item, searchText: searchText),
+                   await ModelProvider.checkIfFileIsIncluded(child: item.item, childOptions: childOptions) {
+                    return [(item, match)]
+                } else if !childOptions.enumeration {
+                    return [] // ends here
+                }
             }
+            
+            return []
         }
         
-        guard await ModelProvider.checkFileType(item: item.item) else { return [] }
+        let match = try await match()
+        
+        print(item)
+        
+        guard await ModelProvider.checkFileType(item: item.item),
+              item.item.isDirectory,
+              match.isEmpty else { return match }
         
         return try await ModelProvider.getChildStream(item: item.item).map { (child) -> [(any QueryItemProtocol, QueryItem.Match)] in
-            guard await ModelProvider.checkIfFileIsIncluded(child: child, childOptions: childOptions) else { return [] }
             let queryChild = QueryItemChild(parent: item, filename: child.name)
             return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText)
-        }.flatten().sequence
+        }.flatten().sequence + match
     }
     
     

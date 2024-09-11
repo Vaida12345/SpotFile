@@ -70,6 +70,11 @@ struct SettingsSelectionView: View {
                                         return
                                     }
                                     focusedState = .relativePath
+                                    
+                                    Task { @MainActor in
+                                        undoManager?.setActionName("Set Item")
+                                        await self.add(item: selection.item)
+                                    }
                                 }
                                 
                                 Button("Browse...") {
