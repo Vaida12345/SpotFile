@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -11,8 +11,12 @@
 		B43EA8792B80DDC100568440 /* SpotFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EA8782B80DDC100568440 /* SpotFileTests.swift */; };
 		B43EA8812B81A2F500568440 /* SearchResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EA8802B81A2F500568440 /* SearchResultView.swift */; };
 		B43EA8832B81AC0F00568440 /* TextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EA8822B81AC0F00568440 /* TextFieldView.swift */; };
-		B44B62392BF7286900010907 /* StratumMacros in Frameworks */ = {isa = PBXBuildFile; productRef = B44B62382BF7286900010907 /* StratumMacros */; };
 		B4515B2F2B81D7D70032D032 /* SearchResultItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4515B2E2B81D7D70032D032 /* SearchResultItem.swift */; };
+		B46CC4272E15591E004DC387 /* ViewCollection in Frameworks */ = {isa = PBXBuildFile; productRef = B46CC4262E15591E004DC387 /* ViewCollection */; };
+		B46CC42A2E155961004DC387 /* ConcurrentStream in Frameworks */ = {isa = PBXBuildFile; productRef = B46CC4292E155961004DC387 /* ConcurrentStream */; };
+		B46CC42D2E1559D3004DC387 /* MacroCollection in Frameworks */ = {isa = PBXBuildFile; productRef = B46CC42C2E1559D3004DC387 /* MacroCollection */; };
+		B46CC4302E155A2E004DC387 /* FinderItem in Frameworks */ = {isa = PBXBuildFile; productRef = B46CC42F2E155A2E004DC387 /* FinderItem */; };
+		B46CC4332E155AD9004DC387 /* UndoTracking in Frameworks */ = {isa = PBXBuildFile; productRef = B46CC4322E155AD9004DC387 /* UndoTracking */; };
 		B46EBD1C2B9587660037D797 /* Query.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46EBD1B2B9587660037D797 /* Query.swift */; };
 		B46EBD1E2B95B4340037D797 /* SettingsSelectionInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46EBD1D2B95B4340037D797 /* SettingsSelectionInspector.swift */; };
 		B474D9762B8EA20800A3EA7C /* QueryItemProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B474D9752B8EA20800A3EA7C /* QueryItemProtocol.swift */; };
@@ -23,7 +27,7 @@
 		B47C28582B6F257F006BB7FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B47C28572B6F257F006BB7FE /* Assets.xcassets */; };
 		B47C285B2B6F257F006BB7FE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B47C285A2B6F257F006BB7FE /* Preview Assets.xcassets */; };
 		B47F31462C42357B009D948A /* QueryChildRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47F31452C423572009D948A /* QueryChildRecord.swift */; };
-		B48B96A72B6F591800FCC2C4 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48B96A62B6F591800FCC2C4 /* DataProvider.swift */; };
+		B499AED12E18229F005B134B /* 􀌄Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B499AED02E18229A005B134B /* 􀌄Coordinator.swift */; };
 		B4A6A75D2BF718FF007973EA /* ChildOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A6A75C2BF718FF007973EA /* ChildOptions.swift */; };
 		B4AFB64B2C4387280082164C /* GotToItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4AFB64A2C43871D0082164C /* GotToItem.swift */; };
 		B4B20B902B807D9200A469DB /* SettingsSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B20B8F2B807D9200A469DB /* SettingsSelectionView.swift */; };
@@ -31,7 +35,6 @@
 		B4CB673A2B9333A6008F7615 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B4CB67392B9333A6008F7615 /* Localizable.xcstrings */; };
 		B4DE34922B6F58C200BB752B /* ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DE34912B6F58C200BB752B /* ModelProvider.swift */; };
 		B4DF9BA62B79CB5900B805A9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */; };
-		B4FAF3F92B6F3EB400DBC07E /* ViewCollection in Frameworks */ = {isa = PBXBuildFile; productRef = B4FAF3F82B6F3EB400DBC07E /* ViewCollection */; };
 		B4FAF3FB2B6F458000DBC07E /* MenuBarStyleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */; };
 		B4FAF3FD2B6F495100DBC07E /* QueryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */; };
 /* End PBXBuildFile section */
@@ -65,7 +68,7 @@
 		B47C285A2B6F257F006BB7FE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B47C285C2B6F257F006BB7FE /* SpotFile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpotFile.entitlements; sourceTree = "<group>"; };
 		B47F31452C423572009D948A /* QueryChildRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryChildRecord.swift; sourceTree = "<group>"; };
-		B48B96A62B6F591800FCC2C4 /* DataProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
+		B499AED02E18229A005B134B /* 􀌄Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "􀌄Coordinator.swift"; sourceTree = "<group>"; };
 		B4A6A75C2BF718FF007973EA /* ChildOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildOptions.swift; sourceTree = "<group>"; };
 		B4AFB64A2C43871D0082164C /* GotToItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GotToItem.swift; sourceTree = "<group>"; };
 		B4B20B8F2B807D9200A469DB /* SettingsSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSelectionView.swift; sourceTree = "<group>"; };
@@ -89,9 +92,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B4FAF3F92B6F3EB400DBC07E /* ViewCollection in Frameworks */,
-				B44B62392BF7286900010907 /* StratumMacros in Frameworks */,
+				B46CC4302E155A2E004DC387 /* FinderItem in Frameworks */,
+				B46CC4332E155AD9004DC387 /* UndoTracking in Frameworks */,
 				B41C13682B82FCF900E7EC86 /* ViewCollection in Frameworks */,
+				B46CC42D2E1559D3004DC387 /* MacroCollection in Frameworks */,
+				B46CC42A2E155961004DC387 /* ConcurrentStream in Frameworks */,
+				B46CC4272E15591E004DC387 /* ViewCollection in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,9 +170,18 @@
 				B4515B2E2B81D7D70032D032 /* SearchResultItem.swift */,
 				B4B9540B2C3FE443006CBCD7 /* IconView.swift */,
 				B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */,
-				B43EA8822B81AC0F00568440 /* TextFieldView.swift */,
+				B499AECF2E182295005B134B /* 􀌄TextFIeld */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		B499AECF2E182295005B134B /* 􀌄TextFIeld */ = {
+			isa = PBXGroup;
+			children = (
+				B43EA8822B81AC0F00568440 /* TextFieldView.swift */,
+				B499AED02E18229A005B134B /* 􀌄Coordinator.swift */,
+			);
+			path = "􀌄TextFIeld";
 			sourceTree = "<group>";
 		};
 		B4AFB6492C437CDB0082164C /* Settings */ = {
@@ -190,7 +205,6 @@
 				B4AFB64A2C43871D0082164C /* GotToItem.swift */,
 				B46EBD1B2B9587660037D797 /* Query.swift */,
 				B4DE34912B6F58C200BB752B /* ModelProvider.swift */,
-				B48B96A62B6F591800FCC2C4 /* DataProvider.swift */,
 				B47F31452C423572009D948A /* QueryChildRecord.swift */,
 			);
 			path = Structures;
@@ -231,9 +245,12 @@
 			);
 			name = SpotFile;
 			packageProductDependencies = (
-				B4FAF3F82B6F3EB400DBC07E /* ViewCollection */,
 				B41C13672B82FCF900E7EC86 /* ViewCollection */,
-				B44B62382BF7286900010907 /* StratumMacros */,
+				B46CC4262E15591E004DC387 /* ViewCollection */,
+				B46CC4292E155961004DC387 /* ConcurrentStream */,
+				B46CC42C2E1559D3004DC387 /* MacroCollection */,
+				B46CC42F2E155A2E004DC387 /* FinderItem */,
+				B46CC4322E155AD9004DC387 /* UndoTracking */,
 			);
 			productName = SpotFile;
 			productReference = B47C28502B6F257E006BB7FE /* SpotFile.app */;
@@ -268,8 +285,11 @@
 			);
 			mainGroup = B47C28472B6F257E006BB7FE;
 			packageReferences = (
-				B447F6C92BBC2AB7000E8DCB /* XCLocalSwiftPackageReference "../../Packages/ViewCollection" */,
-				B44B62372BF7286900010907 /* XCLocalSwiftPackageReference "../../Packages/StratumMacros" */,
+				B46CC4252E15591E004DC387 /* XCRemoteSwiftPackageReference "ViewCollection" */,
+				B46CC4282E155961004DC387 /* XCRemoteSwiftPackageReference "ConcurrentStream" */,
+				B46CC42B2E1559D3004DC387 /* XCRemoteSwiftPackageReference "MacroCollection" */,
+				B46CC42E2E155A2E004DC387 /* XCRemoteSwiftPackageReference "FinderItem" */,
+				B46CC4312E155AD9004DC387 /* XCRemoteSwiftPackageReference "UndoTracking" */,
 			);
 			productRefGroup = B47C28512B6F257E006BB7FE /* Products */;
 			projectDirPath = "";
@@ -318,8 +338,8 @@
 				B474D9762B8EA20800A3EA7C /* QueryItemProtocol.swift in Sources */,
 				B46EBD1E2B95B4340037D797 /* SettingsSelectionInspector.swift in Sources */,
 				B474D97C2B8EA3A500A3EA7C /* QueryItemChild.swift in Sources */,
+				B499AED12E18229F005B134B /* 􀌄Coordinator.swift in Sources */,
 				B4DF9BA62B79CB5900B805A9 /* SettingsView.swift in Sources */,
-				B48B96A72B6F591800FCC2C4 /* DataProvider.swift in Sources */,
 				B47C28562B6F257E006BB7FE /* ContentView.swift in Sources */,
 				B4DE34922B6F58C200BB752B /* ModelProvider.swift in Sources */,
 				B47C28542B6F257E006BB7FE /* SpotFileApp.swift in Sources */,
@@ -353,7 +373,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = UJK52W4D7G;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -371,7 +391,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = UJK52W4D7G;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -516,7 +536,7 @@
 				CODE_SIGN_ENTITLEMENTS = SpotFile/Assets/SpotFile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SpotFile/Assets/Preview Content\"";
 				DEVELOPMENT_TEAM = UJK52W4D7G;
@@ -530,6 +550,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Vaida.app.SpotFile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -548,7 +569,7 @@
 				CODE_SIGN_ENTITLEMENTS = SpotFile/Assets/SpotFile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SpotFile/Assets/Preview Content\"";
 				DEVELOPMENT_TEAM = UJK52W4D7G;
@@ -562,6 +583,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Vaida.app.SpotFile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -604,29 +626,78 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		B447F6C92BBC2AB7000E8DCB /* XCLocalSwiftPackageReference "../../Packages/ViewCollection" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../Packages/ViewCollection;
+/* Begin XCRemoteSwiftPackageReference section */
+		B46CC4252E15591E004DC387 /* XCRemoteSwiftPackageReference "ViewCollection" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Vaida12345/ViewCollection";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.11;
+			};
 		};
-		B44B62372BF7286900010907 /* XCLocalSwiftPackageReference "../../Packages/StratumMacros" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../Packages/StratumMacros;
+		B46CC4282E155961004DC387 /* XCRemoteSwiftPackageReference "ConcurrentStream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Vaida12345/ConcurrentStream";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+		B46CC42B2E1559D3004DC387 /* XCRemoteSwiftPackageReference "MacroCollection" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Vaida12345/MacroCollection";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
+		};
+		B46CC42E2E155A2E004DC387 /* XCRemoteSwiftPackageReference "FinderItem" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Vaida12345/FinderItem";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.16;
+			};
+		};
+		B46CC4312E155AD9004DC387 /* XCRemoteSwiftPackageReference "UndoTracking" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Vaida12345/UndoTracking";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		B41C13672B82FCF900E7EC86 /* ViewCollection */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ViewCollection;
 		};
-		B44B62382BF7286900010907 /* StratumMacros */ = {
+		B46CC4262E15591E004DC387 /* ViewCollection */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = StratumMacros;
-		};
-		B4FAF3F82B6F3EB400DBC07E /* ViewCollection */ = {
-			isa = XCSwiftPackageProductDependency;
+			package = B46CC4252E15591E004DC387 /* XCRemoteSwiftPackageReference "ViewCollection" */;
 			productName = ViewCollection;
+		};
+		B46CC4292E155961004DC387 /* ConcurrentStream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B46CC4282E155961004DC387 /* XCRemoteSwiftPackageReference "ConcurrentStream" */;
+			productName = ConcurrentStream;
+		};
+		B46CC42C2E1559D3004DC387 /* MacroCollection */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B46CC42B2E1559D3004DC387 /* XCRemoteSwiftPackageReference "MacroCollection" */;
+			productName = MacroCollection;
+		};
+		B46CC42F2E155A2E004DC387 /* FinderItem */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B46CC42E2E155A2E004DC387 /* XCRemoteSwiftPackageReference "FinderItem" */;
+			productName = FinderItem;
+		};
+		B46CC4322E155AD9004DC387 /* UndoTracking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B46CC4312E155AD9004DC387 /* XCRemoteSwiftPackageReference "UndoTracking" */;
+			productName = UndoTracking;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

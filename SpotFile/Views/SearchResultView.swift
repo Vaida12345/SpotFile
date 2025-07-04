@@ -30,7 +30,7 @@ struct SearchResultView: View {
             
             if modelProvider.matches.isEmpty {
                 Group {
-                    Text("No result found")
+                    Text("No results found")
                 }
                 .bold()
                 .foregroundStyle(.secondary)
@@ -51,7 +51,7 @@ struct SearchResultView: View {
                 if modelProvider.matches.count > 25 {
                     Group {
                         Divider()
-                        Text("\(modelProvider.matches.count - 25) more items")
+                        Text("\(modelProvider.matches.count - 25 - modelProvider.shownStartIndex) more items")
                     }
                 }
                 

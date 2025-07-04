@@ -5,8 +5,9 @@
 //  Created by Vaida on 2024/2/28.
 //
 
+import Essentials
 import SwiftUI
-import Stratum
+
 
 struct ChildOptionsView: View {
     
@@ -90,9 +91,7 @@ struct ChildOptionsView: View {
                             .foregroundStyle(!options.isEnabled ? .tertiary : .secondary)
                     }
                     .disabled(!options.isEnabled)
-                    .modifier(enabled: !options.isEnabled) { view in
-                        view.foregroundStyle(.tertiary)
-                    }
+                    .foregroundStyle(options.isEnabled ? .primary : .tertiary)
                 }
                 .multilineTextAlignment(.leading)
                 .textFieldStyle(.plain)

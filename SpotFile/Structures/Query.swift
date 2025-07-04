@@ -7,7 +7,7 @@
 
 import Foundation
 import SwiftUI
-import StratumMacros
+import MacroCollection
 
 
 @codable

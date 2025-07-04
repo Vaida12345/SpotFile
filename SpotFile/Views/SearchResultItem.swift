@@ -6,8 +6,7 @@
 //
 
 import SwiftUI
-import Stratum
-import ViewCollection
+
 
 struct SearchResultItem: View {
     

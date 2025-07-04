@@ -5,11 +5,11 @@
 //  Created by Vaida on 2024/2/28.
 //
 
-
+import Essentials
 import SwiftUI
-import Stratum
-import ViewCollection
 import SwiftData
+import UndoTracking
+import FinderItem
 
 
 protocol QueryItemProtocol: AnyObject, UndoTracking {
@@ -52,7 +52,7 @@ extension QueryItemProtocol {
         withErrorPresented("Cannot open reveal file") {
             let path = self.item
             Task { @MainActor in
-                try path.reveal()
+                try await path.reveal()
                 
                 try postSubmitAction()
             }

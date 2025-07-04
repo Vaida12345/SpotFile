@@ -5,9 +5,9 @@
 //  Created by Vaida on 5/17/24.
 //
 
+import Essentials
 import Foundation
-import StratumMacros
-import Stratum
+import MacroCollection
 
 
 extension QueryItem {

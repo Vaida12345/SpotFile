@@ -6,16 +6,22 @@
 //
 
 import Foundation
-import Stratum
 import SwiftUI
 import UniformTypeIdentifiers
 import ConcurrentStream
 import SwiftData
 import OSLog
+import ViewCollection
+import UndoTracking
+import FinderItem
 
 
 @Observable
 final class ModelProvider: Codable, DataProvider, UndoTracking {
+    
+    static var instance = ModelProvider.load()
+    
+    init() { }
     
     var items: [QueryItem] = [] {
         didSet {
@@ -295,8 +301,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         let match = try await match()
         
-        print(item)
-        
         guard await ModelProvider.checkFileType(item: item.item),
               item.item.isDirectory,
               match.isEmpty else { return match }
@@ -347,32 +351,6 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         }
         
     }
-    
-    
-    /// The main ``DataProvider`` to work with.
-    ///
-    /// This structure can be accessed across the app, and any mutations are observed in all views.
-    @MainActor
-    static var instance: ModelProvider = {
-        print(ModelProvider.storageLocation)
-        do {
-            let decoder = PropertyListDecoder()
-            let data = try Data(contentsOf: ModelProvider.storageLocation)
-            
-            do {
-                return try decoder.decode(ModelProvider.self, from: data)
-            } catch {
-                print(error)
-                Task { @MainActor in
-                    AlertManager(error).present()
-                }
-                return ModelProvider()
-            }
-        } catch {
-            return ModelProvider()
-        }
-    }()
-    
     
     static var preview: ModelProvider {
         ModelProvider(items: [.preview], previous: .preview)

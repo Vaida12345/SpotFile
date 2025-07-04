@@ -50,6 +50,12 @@
     "Browse..." : {
 
     },
+    "Cannot open reveal file" : {
+
+    },
+    "Cannot open the file" : {
+
+    },
     "Close Window" : {
 
     },
@@ -60,6 +66,9 @@
 
     },
     "Define what kind of files should be included in search results." : {
+
+    },
+    "Delete \"%@\" encountered error" : {
 
     },
     "Disabled as deep search enabled or the given file is not an directory." : {
@@ -75,6 +84,12 @@
 
     },
     "Expected \"/\"." : {
+
+    },
+    "Failed to import" : {
+
+    },
+    "Failed to save" : {
 
     },
     "Files" : {
@@ -104,7 +119,7 @@
     "New" : {
 
     },
-    "No result found" : {
+    "No results found" : {
 
     },
     "Open" : {

@@ -6,9 +6,9 @@
 //
 
 import Foundation
-import Stratum
 import SwiftData
 import OSLog
+import FinderItem
 
 
 final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStringConvertible {

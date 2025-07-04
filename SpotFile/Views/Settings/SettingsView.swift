@@ -5,9 +5,11 @@
 //  Created by Vaida on 2024/2/12.
 //
 
+import Essentials
 import SwiftUI
-import Stratum
 import SwiftData
+import UndoTracking
+
 
 struct SettingsView: View {
     
@@ -53,7 +55,10 @@ struct SettingsView: View {
                             selectedItem = newItem.id
                         }
                     }
-                    modelProvider.append(newItem, to: \.items, undoManager: undoManager)
+                    
+                    withUndoTracking(undoManager) {
+                        modelProvider.append(newItem, to: \.items)
+                    }
                 } label: {
                     Label("New", systemImage: "plus")
                 }

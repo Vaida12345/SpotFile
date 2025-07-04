@@ -1,59 +1,15 @@
 //
-//  TextFieldView.swift
+//  TextFIeld + Coordinator.swift
 //  SpotFile
 //
-//  Created by Vaida on 2024/2/18.
+//  Created by Vaida on 2025-07-05.
 //
 
-import Foundation
 import AppKit
-import SwiftUI
 import SwiftData
 
 
-// original code from https://developer.apple.com/library/archive/samplecode/CustomMenus
-
-struct SuggestionTextField: NSViewRepresentable {
-    
-    let modelProvider: ModelProvider
-    
-    let context: ModelContext
-    
-    
-    func makeNSView(context: Context) -> NSSearchField {
-        let searchField = NSSearchField(frame: .zero)
-        searchField.maximumRecents = 0
-        searchField.controlSize = .regular
-        searchField.font = NSFont.systemFont(ofSize: NSFont.systemFontSize(for: searchField.controlSize))
-        searchField.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(rawValue: 1), for: .horizontal)
-        searchField.setContentHuggingPriority(NSLayoutConstraint.Priority(rawValue: 1), for: .horizontal)
-        searchField.delegate = context.coordinator
-        
-        let searchFieldCell = searchField.cell!
-        searchFieldCell.lineBreakMode = .byWordWrapping
-        
-        context.coordinator.searchField = searchField
-        
-        return searchField
-    }
-    
-    func updateNSView(_ searchField: NSSearchField, context: Context) {
-        if let prefix = modelProvider.previous.parentQuery,
-            modelProvider.searchText.hasPrefix(prefix) {
-            let pendingUpdate = String(modelProvider.searchText.dropFirst(prefix.count))
-            if searchField.stringValue != pendingUpdate {
-                searchField.stringValue = pendingUpdate
-            }
-        } else {
-            if searchField.stringValue != modelProvider.searchText {
-                searchField.stringValue = modelProvider.searchText
-            }
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(modelProvider: modelProvider, context: context)
-    }
+extension SuggestionTextField {
     
     final class Coordinator: NSObject, NSSearchFieldDelegate {
         
@@ -105,8 +61,8 @@ struct SuggestionTextField: NSViewRepresentable {
                 }
                 return true // always consume
             } else if commandSelector == #selector(NSResponder.complete(_:)) ||
-                commandSelector == #selector(NSResponder.cancelOperation(_:)) ||
-                commandSelector == #selector(NSResponder.deleteToBeginningOfLine(_:)) {
+                        commandSelector == #selector(NSResponder.cancelOperation(_:)) ||
+                        commandSelector == #selector(NSResponder.deleteToBeginningOfLine(_:)) {
                 modelProvider.reset()
                 
                 return true
@@ -114,7 +70,7 @@ struct SuggestionTextField: NSViewRepresentable {
                 modelProvider.submitItem(context: context)
                 
                 return true
-            } else if commandSelector == #selector(NSResponder.insertTab(_:)) {
+            } else if commandSelector == #selector(NSResponder.insertTab(_:)), modelProvider.selectionIndex < modelProvider.matches.count {
                 let selection = modelProvider.matches[modelProvider.selectionIndex]
                 if let item = selection.1 as? QueryItem {
                     modelProvider.searchText = " "
@@ -127,4 +83,5 @@ struct SuggestionTextField: NSViewRepresentable {
             }
         }
     }
+    
 }

@@ -5,8 +5,8 @@
 //  Created by Vaida on 2024/2/4.
 //
 
+import Essentials
 import SwiftUI
-import Stratum
 import SwiftData
 
 
@@ -44,10 +44,8 @@ struct SpotFileApp: App {
         .commands {
             CommandGroup(replacing: .saveItem) {
                 Button("Save") {
-                    do {
+                    withErrorPresented("Failed to save") {
                         try ModelProvider.instance.save()
-                    } catch {
-                        AlertManager(error).present()
                     }
                 }
                 .keyboardShortcut(.init("s"), modifiers: .command)
@@ -59,6 +57,8 @@ struct SpotFileApp: App {
                 }
                 .keyboardShortcut(.init("w"), modifiers: .command)
             }
+            
+            InspectorCommands()
         }
     }
     

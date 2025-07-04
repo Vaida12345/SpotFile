@@ -9,22 +9,22 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @Environment(\.openWindow) private var openWindow 
-    
+    @Environment(\.openWindow) private var openWindow
     @Environment(ModelProvider.self) private var modelProvider: ModelProvider
-    
     @EnvironmentObject private var appDelegate: SpotFileApp.ApplicationDelegate
-    
     @Environment(\.modelContext) private var modelContext
     
-    
+    @State private var isFocused = false
     @State private var isSyncing = false
     
     
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            SuggestionTextField(modelProvider: modelProvider, context: modelContext)
+            SuggestionTextField(isFirstResponder: $isFocused, modelProvider: modelProvider, context: modelContext)
                 .autocorrectionDisabled()
+                .onAppear {
+                    isFocused = true
+                }
             
             if modelProvider.searchText.isEmpty {
                 MenuBarStyleButton(keyboardShortcut: Text(Image(systemName: "command")) + Text(" ,")) {

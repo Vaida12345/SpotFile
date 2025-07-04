@@ -1,13 +1,94 @@
 {
-  "originHash" : "4632e892d6909473e35148d2b01f41a70e4328f49a6d9d8e738ed880fe4c36af",
+  "originHash" : "cc0176a35209c0e087221b139073a793f92d5e0b07c533bf92b263f4f595e999",
   "pins" : [
+    {
+      "identity" : "concurrentstream",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Vaida12345/ConcurrentStream",
+      "state" : {
+        "revision" : "f7f52360f322efc754c911b9c83df423055a694e",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "detaileddescription",
+      "kind" : "remoteSourceControl",
+      "location" : "https://www.github.com/Vaida12345/DetailedDescription",
+      "state" : {
+        "revision" : "d9726110ad54474071bf7fac6c2d256d44b1fa63",
+        "version" : "2.0.7"
+      }
+    },
+    {
+      "identity" : "essentials",
+      "kind" : "remoteSourceControl",
+      "location" : "https://www.github.com/Vaida12345/Essentials",
+      "state" : {
+        "revision" : "f177c1101c3cda5caf1c581cac3d1868dfcbcc49",
+        "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "finderitem",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Vaida12345/FinderItem",
+      "state" : {
+        "revision" : "f0e54491f93d6eaf50891f08bc513ef86d9044d2",
+        "version" : "1.0.18"
+      }
+    },
+    {
+      "identity" : "macrocollection",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Vaida12345/MacroCollection",
+      "state" : {
+        "revision" : "f1e20b4e3da444fddc278e800da683bfe1706475",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "macroessentials",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Vaida12345/MacroEssentials",
+      "state" : {
+        "revision" : "7c9b1fac6d237c24523627378704717a900c3c9d",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "nativeimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://www.github.com/Vaida12345/NativeImage",
+      "state" : {
+        "revision" : "c3c562710f058caa9fcbaba2c20ba3e3f404d7ec",
+        "version" : "1.0.2"
+      }
+    },
     {
       "identity" : "swift-syntax",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-syntax.git",
       "state" : {
-        "revision" : "64889f0c732f210a935a0ad7cda38f77f876262d",
-        "version" : "509.1.1"
+        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
+        "version" : "601.0.1"
+      }
+    },
+    {
+      "identity" : "undotracking",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Vaida12345/UndoTracking",
+      "state" : {
+        "branch" : "main",
+        "revision" : "0bd3cf79af6ba685d5e89956905d35efa997815d"
+      }
+    },
+    {
+      "identity" : "viewcollection",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Vaida12345/ViewCollection",
+      "state" : {
+        "revision" : "9239455ab5d30cfef8175d97ab51cd75a2cbd4de",
+        "version" : "1.1.13"
       }
     }
   ],

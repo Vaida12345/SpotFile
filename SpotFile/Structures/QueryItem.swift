@@ -6,15 +6,17 @@
 //
 
 import Foundation
-import Stratum
 import SwiftUI
-import StratumMacros
+import MacroCollection
 import SwiftData
+import FinderItem
+import UndoTracking
 
 
 @Observable
 @codable
-final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringConvertible {
+@memberwiseInitializable
+final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringConvertible, UndoTracking {
     
     var id: UUID
     

@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import UndoTracking
+
 
 struct SettingsSelectionInspector: View {
     
@@ -33,7 +35,9 @@ struct SettingsSelectionInspector: View {
                     
                     Button {
                         let newValue = Query(value: "new")
-                        selection.append(newValue, to: \.additionalQueries, undoManager: undoManager)
+                        withUndoTracking(undoManager) {
+                            selection.append(newValue, to: \.additionalQueries)
+                        }
                         focus = newValue.id
                     } label: {
                         Image(systemName: "plus")
@@ -48,7 +52,9 @@ struct SettingsSelectionInspector: View {
                     .padding(.vertical, 2.5)
                     .onSubmit {
                         if query.wrappedValue.content.isEmpty {
-                            selection.remove(query.wrappedValue, from: \.additionalQueries, undoManager: undoManager)
+                            withUndoTracking(undoManager) {
+                                selection.remove(query.wrappedValue, from: \.additionalQueries)
+                            }
                         }
                     }
                     .focused($focus, equals: query.id)
@@ -58,7 +64,9 @@ struct SettingsSelectionInspector: View {
                         Divider()
                         
                         Button("Remove") {
-                            selection.remove(query.wrappedValue, from: \.additionalQueries, undoManager: undoManager)
+                            withUndoTracking(undoManager) {
+                                selection.remove(query.wrappedValue, from: \.additionalQueries)
+                            }
                         }
                     }
             }

@@ -5,8 +5,12 @@
 //  Created by Vaida on 2024/2/17.
 //
 
+import Essentials
 import SwiftUI
-import Stratum
+import ViewCollection
+import FinderItem
+import UndoTracking
+
 
 struct SettingsSelectionView: View {
     
@@ -163,15 +167,13 @@ struct SettingsSelectionView: View {
                 }
             }
             .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.item, .folder]) { result in
-                do {
+                withErrorPresented("Failed to import") {
                     let url = try result.get()
                     let item = FinderItem(at: url)
                     Task { @MainActor in
                         undoManager?.setActionName("Add File from File Importer")
                         await self.add(item: item)
                     }
-                } catch {
-                    AlertManager(error).present()
                 }
             }
             .fileDialogDefaultDirectory(itemIsNew ? nil : selection.item.url)
@@ -183,9 +185,11 @@ struct SettingsSelectionView: View {
             .toolbar {
                 HStack {
                     Button {
-                        modelProvider.remove(selection, from: \.items, undoManager: undoManager)
+                        withUndoTracking(undoManager) {
+                            modelProvider.remove(selection, from: \.items)
+                        }
                         
-                        withErrorPresented("Delete \"\(selection.query)\" encountered error") {
+                        withErrorPresented("Delete \"\(selection.query.description)\" encountered error") {
                             try modelContext.delete(model: QueryChildRecord.self, where: #Predicate { $0.parentID == selection.id })
                         }
                     } label: {

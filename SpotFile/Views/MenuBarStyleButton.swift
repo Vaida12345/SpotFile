@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import ViewCollection
+
 
 struct MenuBarStyleButton<Label>: View where Label: View {
     
@@ -24,26 +24,14 @@ struct MenuBarStyleButton<Label>: View where Label: View {
         } label: {
             HStack {
                 label()
-                    .modifier(enabled: isOnHover) { contentView in
-                        contentView
-                            .foregroundStyle(.white)
-                    } else: { contentView in
-                        contentView
-                            .foregroundStyle(.primary)
-                    }
+                    .foregroundStyle(isOnHover ? .white : .primary)
                 
                 Spacer()
                 
                 if let keyboardShortcut {
                     HStack {
                         keyboardShortcut
-                            .modifier(enabled: isOnHover) { contentView in
-                                contentView
-                                    .foregroundStyle(.white)
-                            } else: { contentView in
-                                contentView
-                                    .foregroundStyle(.tertiary)
-                            }
+                            .foregroundStyle(isOnHover ? AnyShapeStyle(.white) : AnyShapeStyle(.tertiary))
                         
                         Spacer()
                     }
