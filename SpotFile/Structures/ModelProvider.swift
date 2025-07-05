@@ -263,7 +263,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     
     /// Explicitly make async to wait for fileI/O.
     private nonisolated static func checkFileType(item: FinderItem) async -> Bool {
-        !((try? item.fileType.contains(.package)) ?? false)
+        !((try? item.url.resourceValues(forKeys: [.isPackageKey]).isPackage) ?? false)
     }
     private nonisolated static func checkIfFileIsIncluded(child: FinderItem, childOptions: QueryItem.ChildOptions) async -> Bool {
         (childOptions.includeFolder && child.isDirectory) || (childOptions.includeFile && child.isFile)
