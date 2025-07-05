@@ -303,6 +303,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         guard await ModelProvider.checkFileType(item: item.item),
               item.item.isDirectory,
+              (item is QueryItem) || childOptions.enumeration,
               match.isEmpty else { return match }
         
         return try await ModelProvider.getChildStream(item: item.item).map { (child) -> [(any QueryItemProtocol, QueryItem.Match)] in

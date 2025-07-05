@@ -29,6 +29,7 @@ struct SpotFileApp: App {
                 .environment(modelProvider)
                 .environmentObject(applicationDelegate)
                 .modelContainer(modelContainer)
+                .transaction { $0.animation = nil }
         } label: {
             Image("SpotFile")
                 .imageScale(.large)
