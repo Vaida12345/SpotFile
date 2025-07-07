@@ -59,7 +59,6 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStri
             let relativePath = self.openableFileRelativePath
             let models = try context.fetch(FetchDescriptor<QueryChildRecord>(predicate: #Predicate { $0.parentID == parentID && $0.relativePath == relativePath })).filter({ search.starts(with: $0.query) })
             if !models.isEmpty {
-                assert(models.count == 1)
                 models[0].count += 1
             } else {
                 context.insert(QueryChildRecord(parentID: parentID, query: search, relativePath: self.openableFileRelativePath, count: 1))

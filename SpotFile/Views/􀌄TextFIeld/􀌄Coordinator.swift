@@ -39,7 +39,9 @@ extension SuggestionTextField {
         }
         
         func controlTextDidEndEditing(_ obj: Notification) {
-            modelProvider.submitItem(context: context)
+            Task {
+                await modelProvider.submitItem(context: context)
+            }
         }
         
         func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
@@ -67,7 +69,9 @@ extension SuggestionTextField {
                 
                 return true
             } else if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                modelProvider.submitItem(context: context)
+                Task {
+                    await modelProvider.submitItem(context: context)
+                }
                 
                 return true
             } else if commandSelector == #selector(NSResponder.insertTab(_:)), modelProvider.selectionIndex < modelProvider.matches.count {

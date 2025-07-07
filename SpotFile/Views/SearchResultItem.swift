@@ -113,12 +113,16 @@ struct SearchResultItem: View {
             if modelProvider.selectionIndex != index {
                 modelProvider.selectionIndex = index
             } else {
-                item.open(query: modelProvider.searchText, context: modelContext)
+                Task {
+                    await item.open(query: modelProvider.searchText, context: modelContext)
+                }
             }
         }
         .contextMenu {
             Button("Open") {
-                item.open(query: modelProvider.searchText, context: modelContext)
+                Task {
+                    await item.open(query: modelProvider.searchText, context: modelContext)
+                }
             }
             Button("Show in Enclosing Folder") {
                 item.reveal(query: modelProvider.searchText, context: modelContext)

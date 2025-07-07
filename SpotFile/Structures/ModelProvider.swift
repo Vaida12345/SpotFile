@@ -313,9 +313,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     }
     
     
-    func submitItem(context: ModelContext) {
+    func submitItem(context: ModelContext) async {
         guard selectionIndex < self.matches.count else { return }
-        self.matches[selectionIndex].1.open(query: self.searchText, context: context)
+        await self.matches[selectionIndex].1.open(query: self.searchText, context: context)
     }
     
     func revealItem(context: ModelContext) {

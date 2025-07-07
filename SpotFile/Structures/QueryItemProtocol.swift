@@ -59,11 +59,11 @@ extension QueryItemProtocol {
         }
     }
     
-    func open(query: String, context: ModelContext) {
+    func open(query: String, context: ModelContext) async {
         updateRecords(query, context: context)
         let item = self.item
         
-        withErrorPresented("Cannot open the file") {
+        await withErrorPresented("Cannot open the file") {
             let path: FinderItem
             
             if let child = self as? QueryItemChild {
@@ -81,10 +81,8 @@ extension QueryItemProtocol {
                 path = item.appending(path: openableFileRelativePath)
             }
             
-            Task {
-                try await path.open()
-                try await postSubmitAction()
-            }
+            await path.open()
+            try await postSubmitAction()
         }
     }
 }
