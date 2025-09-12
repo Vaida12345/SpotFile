@@ -44,17 +44,21 @@ struct SpotFileApp: App {
         }
         .commands {
             CommandGroup(replacing: .saveItem) {
-                Button("Save") {
+                Button {
                     withErrorPresented("Failed to save") {
                         try ModelProvider.instance.save()
                     }
+                } label: {
+                    Label("Save", systemImage: "square.and.arrow.down")
                 }
                 .keyboardShortcut(.init("s"), modifiers: .command)
             }
             
             CommandGroup(after: .saveItem) {
-                Button("Close Window") {
+                Button {
                     dismissWindow(id: "configuration")
+                } label: {
+                    Label("Close Window", systemImage: "xmark")
                 }
                 .keyboardShortcut(.init("w"), modifiers: .command)
             }

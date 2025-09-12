@@ -81,7 +81,7 @@ extension QueryItemProtocol {
                 path = item.appending(path: openableFileRelativePath)
             }
             
-            await path.open()
+            try await path.open()
             try await postSubmitAction()
         }
     }

@@ -183,7 +183,7 @@ struct SettingsSelectionView: View {
                 }
             }
             .toolbar {
-                HStack {
+                ToolbarItem {
                     Button {
                         withUndoTracking(undoManager) {
                             modelProvider.remove(selection, from: \.items)
@@ -197,9 +197,14 @@ struct SettingsSelectionView: View {
                             .symbolRenderingMode(.multicolor)
                     }
                     .keyboardShortcut(.delete, modifiers: [])
-                    
-                    Divider()
-                    
+                    .help("Delete this item")
+                }
+                
+                if #available(macOS 26.0, *) {
+                    ToolbarSpacer()
+                }
+                
+                ToolbarItem {
                     Button {
                         showInspector.toggle()
                     } label: {

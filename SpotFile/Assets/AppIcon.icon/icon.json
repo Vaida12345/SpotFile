@@ -1,0 +1,76 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.00000,0.47843,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "blend-mode" : "soft-light",
+      "blur-material" : null,
+      "layers" : [
+        {
+          "image-name" : "Screenshot 2025-09-07 at 4.19.59 PM.png",
+          "name" : "Screenshot 2025-09-07 at 4.19.59 PM",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              70.265625,
+              62.4296875
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.37
+      }
+    },
+    {
+      "blend-mode" : "overlay",
+      "blur-material" : 1,
+      "hidden" : false,
+      "layers" : [
+        {
+          "fill" : {
+            "automatic-gradient" : "extended-gray:1.00000,1.00000"
+          },
+          "image-name" : "Untitled-2 2.png",
+          "name" : "Untitled-2 2",
+          "position" : {
+            "scale" : 1.42,
+            "translation-in-points" : [
+              292.2578125,
+              -100.4765625
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "position" : {
+        "scale" : 1,
+        "translation-in-points" : [
+          9.828125,
+          31.0625
+        ]
+      },
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 1
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

@@ -6,26 +6,26 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Vaida12345/ConcurrentStream",
       "state" : {
-        "revision" : "f7f52360f322efc754c911b9c83df423055a694e",
-        "version" : "1.0.1"
+        "revision" : "5b38deff93bc99abea5abfcd5290772d935cec78",
+        "version" : "1.0.3"
       }
     },
     {
       "identity" : "detaileddescription",
       "kind" : "remoteSourceControl",
-      "location" : "https://www.github.com/Vaida12345/DetailedDescription",
+      "location" : "https://github.com/Vaida12345/DetailedDescription.git",
       "state" : {
-        "revision" : "0c5fbe3befeb9cfa5af2741796b4b560744c44dd",
-        "version" : "2.0.8"
+        "revision" : "d4ae923e6cc5dadc7219d54cbf31912889f7bf33",
+        "version" : "2.1.1"
       }
     },
     {
       "identity" : "essentials",
       "kind" : "remoteSourceControl",
-      "location" : "https://www.github.com/Vaida12345/Essentials",
+      "location" : "https://github.com/Vaida12345/Essentials.git",
       "state" : {
-        "revision" : "d0beafc3d2e72d7e094a26c20ee5db6dfd86122c",
-        "version" : "1.1.2"
+        "revision" : "fbdd9396c66cb4057c61c8119e31d688e55ddfb1",
+        "version" : "1.1.5"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Vaida12345/FinderItem",
       "state" : {
-        "revision" : "94ba16863c27100b6bdb8a20fa66dd4f88f6d2ec",
-        "version" : "1.0.24"
+        "revision" : "8bdd169de0ea5439e31606fd8186c0b480b46e68",
+        "version" : "1.2.3"
       }
     },
     {
@@ -42,26 +42,26 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Vaida12345/MacroCollection",
       "state" : {
-        "revision" : "f1e20b4e3da444fddc278e800da683bfe1706475",
-        "version" : "1.0.1"
+        "revision" : "c847f5b7c5f44715ea2cc066a5b4b00fe475c065",
+        "version" : "1.0.2"
       }
     },
     {
       "identity" : "macroessentials",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Vaida12345/MacroEssentials",
+      "location" : "https://github.com/Vaida12345/MacroEssentials.git",
       "state" : {
-        "revision" : "7c9b1fac6d237c24523627378704717a900c3c9d",
-        "version" : "1.0.0"
+        "revision" : "43dd79407e69c26b0384c7880462b2d74cdb3ac2",
+        "version" : "1.0.1"
       }
     },
     {
       "identity" : "nativeimage",
       "kind" : "remoteSourceControl",
-      "location" : "https://www.github.com/Vaida12345/NativeImage",
+      "location" : "https://github.com/Vaida12345/NativeImage.git",
       "state" : {
-        "revision" : "c3c562710f058caa9fcbaba2c20ba3e3f404d7ec",
-        "version" : "1.0.2"
+        "revision" : "85534ff1cf306ed9e674c5dc782dd0ca8bda423d",
+        "version" : "1.0.3"
       }
     },
     {
@@ -79,7 +79,7 @@
       "location" : "https://github.com/Vaida12345/UndoTracking",
       "state" : {
         "branch" : "main",
-        "revision" : "0bd3cf79af6ba685d5e89956905d35efa997815d"
+        "revision" : "6ca21254a433cc82f5fbb9303a570685a35af613"
       }
     },
     {
@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Vaida12345/ViewCollection",
       "state" : {
-        "revision" : "7d9147dba961da47ef2b7ce9bfa18e9aaab3800f",
-        "version" : "1.1.15"
+        "revision" : "674b3fe0ecc303fb922cbe6bafbf2981c064fdb4",
+        "version" : "1.1.23"
       }
     }
   ],
