@@ -28,6 +28,10 @@ protocol QueryItemProtocol: AnyObject, UndoTracking {
     
     func match(query: String) -> QueryItem.Match?
     
+    func matches(lowercasedQueryChars: [Character]) -> Bool
+    
+    func match(lowercasedQueryChars: [Character]) -> QueryItem.Match?
+    
 }
 
 
@@ -38,6 +42,18 @@ extension QueryItemProtocol {
     
     func match(query: String) -> QueryItem.Match? {
         if let match = self.query.match(query: query, isChild: self is QueryItemChild) {
+            return QueryItem.Match(text: match, isPrimary: true)
+        }
+        
+        return nil
+    }
+    
+    func matches(lowercasedQueryChars: [Character]) -> Bool {
+        self.query.matches(lowercasedQueryChars: lowercasedQueryChars, isChild: self is QueryItemChild)
+    }
+    
+    func match(lowercasedQueryChars: [Character]) -> QueryItem.Match? {
+        if let match = self.query.match(lowercasedQueryChars: lowercasedQueryChars, isChild: self is QueryItemChild) {
             return QueryItem.Match(text: match, isPrimary: true)
         }
         

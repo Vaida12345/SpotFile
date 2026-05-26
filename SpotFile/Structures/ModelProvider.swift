@@ -60,12 +60,14 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
     func updateSearches(context: ModelContext, forceDeepSearch: QueryItem? = nil) {
         guard !searchText.isEmpty else { self.reset(); return }
         
+        #if DEBUG
         let logger = Logger(subsystem: "app.Vaida.spotFile", category: #function)
         let _startDate = Date()
         logger.trace("start to search for \"\(self.searchText)\"")
+        #endif
         
         nonisolated(unsafe)
-        let previous = previous // cross actor.
+        let previous = previous
         let searchText = searchText
         let previousSearchText = previous.searchText
         nonisolated(unsafe)
@@ -79,7 +81,10 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         let canUseLastResult = searchText.hasPrefix(previousSearchText) && previous.task == nil
         previous.task?.cancel()
-        // Can now safely discard the previous task. As before the task could make any changes, on the main actor, it must had checked for cancelation. During execution, no suspension point was provided, hence such transaction would be completed before the next one can run.
+        
+        // Pre-compute lowercased values once per search
+        let lowercasedQueryChars = Array(searchText.lowercased())
+        let loweredSearchText = String(lowercasedQueryChars)
         
         previous.task = Task.detached {
             @MainActor
@@ -92,7 +97,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 previous.parentQuery = parentQuery
                 previous.matches = matches
                 
+                #if DEBUG
                 logger.trace("searching \"\(searchText)\" completed within \(_startDate.distanceToNow())")
+                #endif
             }
             
             if searchText.count < previousSearchText.count {
@@ -103,30 +110,43 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             
             let total = !previousSearchText.isEmpty && canUseLastResult ? previous.matches : items
             
+            // Pre-compute openedRecords scores for sorting
+            let recordScores: [UUID: Int] = items.reduce(into: [:]) { dict, item in
+                let maxCount = item.openedRecords
+                    .filter { $0.key.hasPrefix(searchText) }
+                    .map(\.value).max() ?? 0
+                if maxCount > 0 { dict[item.id] = maxCount }
+            }
+            
             let __fetch_date = Date()
             
             let itemsMatches: [(QueryItem, QueryItem.Match)] = if previous.parentQuery != nil {
                 []
             } else {
                 try await total.stream.compactMap { item in
-                    if let string = try await ModelProvider._check(item: item, searchText: searchText) {
+                    if let string = try await ModelProvider._check(item: item, lowercasedQueryChars: lowercasedQueryChars) {
                         return (item, string)
                     } else {
                         return nil
                     }
                 }.sequence.sorted(on: {
-                    if $0.0.query.content.lowercased() == searchText.lowercased() {
+                    if $0.0.query.lowercasedContent == loweredSearchText {
                         return Int.max
                     } else {
-                        return ($0.0.openedRecords.filter({ $0.key.hasPrefix(searchText) }).map(\.value).max() ?? 0) << 32 | (Int(UInt32.max) - $0.0.query.content.count)
+                        let recordScore = recordScores[$0.0.id] ?? 0
+                        return recordScore << 32 | (Int(UInt32.max) - $0.0.query.content.count)
                     }
                 }, by: >)
             }
             
+#if DEBUG
             print("Fetch changes in", __fetch_date.distanceToNow())
+            #endif
             
             func exitWithoutDeepSearch() async throws {
+#if DEBUG
                 logger.trace("not perform deep search for \"\(searchText)\", exit with current match count: \(itemsMatches.count), previous match count: \(previous.matches.count)")
+                #endif
                 
                 var matchesIsUpdated = false
                 if itemsMatches.isEmpty {
@@ -161,11 +181,13 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         matchesIsUpdated = true
                     }
                     
+#if DEBUG
                     if matchesIsUpdated {
                         logger.trace("assumed input of \"\(searchText)\" is file path.")
                     } else {
                         logger.trace("will exit without finding any match")
                     }
+#endif
                 }
                 
                 if !matchesIsUpdated {
@@ -182,7 +204,9 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                         }
                     }
                     
+#if DEBUG
                     print("push changes to main actor in", date.distanceToNow())
+#endif
                 }
                 
                 try await MainActor.run {
@@ -190,7 +214,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 }
             }
             
-            guard (itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased())}))) || forceDeepSearch != nil else {
+            guard (itemsMatches.isEmpty && (previous.matches.count == 1 || previous.matches.contains(where: { loweredSearchText.hasPrefix($0.query.lowercasedContent) }))) || forceDeepSearch != nil else {
                 try await exitWithoutDeepSearch()
                 return
             }
@@ -199,7 +223,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             if let forceDeepSearch {
                 previous.matches = [forceDeepSearch]
             } else if previous.matches.count > 1 {
-                previous.matches = [previous.matches.first(where: { searchText.lowercased().hasPrefix($0.query.content.lowercased()) })!]
+                previous.matches = [previous.matches.first(where: { loweredSearchText.hasPrefix($0.query.lowercasedContent) })!]
             }
             
             guard (previous.matches.first?.childOptions.isEnabled ?? false) && (searchText.hasPrefix(" ") || searchText.hasSuffix(" ") || (previous.parentQuery != nil && searchText.hasPrefix(previous.parentQuery!))) else {
@@ -213,39 +237,51 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
                 isInitial = true
                 previous.parentQuery = previous.searchText
             }
-            let searchText = if isInitial {
+            let deepSearchText = if isInitial {
                 String(searchText.dropFirst(previous.searchText.count))
             } else {
                 searchText
             }
+            let lowercasedDeepQueryChars = Array(deepSearchText.lowercased())
+            let loweredDeepSearchText = String(lowercasedDeepQueryChars)
             
             let __fetch_children_date = Date()
             var _matches: [(any QueryItemProtocol, QueryItem.Match)]
             if !previous.childrenMatches.isEmpty && canUseLastResult {
+                #if DEBUG
                 logger.trace("deep search: can use last result")
+                #endif
                 _matches = try await previous.childrenMatches.stream.map { child in
-                    try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: searchText)
+                    try await self._recursiveMatch(child, childOptions: previous.matches.first!.childOptions, searchText: deepSearchText, lowercasedQueryChars: lowercasedDeepQueryChars)
                 }.flatten().sequence
             } else {
                 // cannot use last result
-                logger.trace("deep search: cannot use last result, use search text: \(searchText)")
-                _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: searchText)
+#if DEBUG
+                logger.trace("deep search: cannot use last result, use search text: \(deepSearchText)")
+#endif
+                _matches = try await self._recursiveMatch(previous.matches.first!, childOptions: previous.matches.first!.childOptions, searchText: deepSearchText, lowercasedQueryChars: lowercasedDeepQueryChars)
             }
+#if DEBUG
             print("fetch children in ", __fetch_children_date.distanceToNow())
+#endif
             
             
-            let search = String(searchText.dropFirst(while: { $0.isWhitespace }))
+            let search = String(deepSearchText.dropFirst(while: { $0.isWhitespace }))
             if !search.isEmpty {
                 let parentID = previous.matches.first!.id
                 
                 let models = try context.fetch(FetchDescriptor<QueryChildRecord>(predicate: #Predicate { $0.parentID == parentID })).filter({ search.starts(with: $0.query) })
                 
+                // Pre-compute model scores for sort
+                let modelScores: [String: Int] = models.reduce(into: [:]) { dict, model in
+                    dict[model.relativePath] = max(dict[model.relativePath] ?? 0, model.count)
+                }
+                
                 _matches = _matches.sorted(on: { match in
-                    if match.0.query.content.lowercased() == searchText.lowercased() {
+                    if match.0.query.lowercasedContent == loweredDeepSearchText {
                         return Int.max
                     } else {
-                        let _models = models.filter({ $0.relativePath == match.0.openableFileRelativePath })
-                        let maxMatch = _models.map(\.count).max() ?? 0
+                        let maxMatch = modelScores[match.0.openableFileRelativePath] ?? 0
                         return maxMatch << 32 | (Int(UInt32.max) - match.0.query.content.count)
                     }
                 }, by: >)
@@ -272,14 +308,16 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         try item.children(range: .contentsOfDirectory).stream
     }
     
-    private nonisolated static func _check(item: some QueryItemProtocol, searchText: String) async throws -> QueryItem.Match? {
-        item.match(query: searchText)
+    private nonisolated static func _check(item: some QueryItemProtocol, lowercasedQueryChars: [Character]) async throws -> QueryItem.Match? {
+        guard item.matches(lowercasedQueryChars: lowercasedQueryChars) else { return nil }
+        return item.match(lowercasedQueryChars: lowercasedQueryChars)
     }
     
     private nonisolated func _recursiveMatch(
         _ item: any QueryItemProtocol,
         childOptions: QueryItem.ChildOptions,
-        searchText: String
+        searchText: String,
+        lowercasedQueryChars: [Character]
     ) async throws -> [(any QueryItemProtocol, QueryItem.Match)] {
         try Task.checkCancellation()
         
@@ -288,7 +326,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
             if !(item is QueryItem) {
                 // the actual matching
                 if childOptions.filterContains(item.item.name),
-                   let match = try await ModelProvider._check(item: item, searchText: searchText),
+                   let match = try await ModelProvider._check(item: item, lowercasedQueryChars: lowercasedQueryChars),
                    await ModelProvider.checkIfFileIsIncluded(child: item.item, childOptions: childOptions) {
                     return [(item, match)]
                 } else if !childOptions.enumeration {
@@ -308,7 +346,7 @@ final class ModelProvider: Codable, DataProvider, UndoTracking {
         
         return try await ModelProvider.getChildStream(item: item.item).map { (child) -> [(any QueryItemProtocol, QueryItem.Match)] in
             let queryChild = QueryItemChild(parent: item, filename: child.name)
-            return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText)
+            return try await self._recursiveMatch(queryChild, childOptions: childOptions, searchText: searchText, lowercasedQueryChars: lowercasedQueryChars)
         }.flatten().sequence + match
     }
     

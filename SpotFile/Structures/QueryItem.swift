@@ -58,6 +58,30 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringCon
         return nil
     }
     
+    func matches(lowercasedQueryChars: [Character]) -> Bool {
+        if self.query.matches(lowercasedQueryChars: lowercasedQueryChars, isChild: false) {
+            return true
+        }
+        for additionalQuery in additionalQueries {
+            if additionalQuery.matches(lowercasedQueryChars: lowercasedQueryChars, isChild: true) {
+                return true
+            }
+        }
+        return false
+    }
+    
+    func match(lowercasedQueryChars: [Character]) -> QueryItem.Match? {
+        if let match = self.query.match(lowercasedQueryChars: lowercasedQueryChars, isChild: false) {
+            return Match(text: match, isPrimary: true)
+        }
+        for additionalQuery in additionalQueries {
+            if let match = additionalQuery.match(lowercasedQueryChars: lowercasedQueryChars, isChild: true) {
+                return Match(text: match, isPrimary: false)
+            }
+        }
+        return nil
+    }
+    
     func copy() -> QueryItem {
         QueryItem(id: self.id, query: self.query, item: item, openableFileRelativePath: openableFileRelativePath, iconSystemName: iconSystemName, openedRecords: openedRecords, childOptions: childOptions, additionalQueries: additionalQueries)
     }

@@ -12,11 +12,11 @@ import SwiftData
 @Model
 final class QueryChildRecord: CustomStringConvertible {
     
-    let parentID: UUID
+    var parentID: UUID
     
-    let query: String
+    var query: String
     
-    let relativePath: String
+    var relativePath: String
     
     var count: Int
     
