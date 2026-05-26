@@ -31,10 +31,10 @@ struct ContentView: View {
                     NSApp.setActivationPolicy(.regular)
                     openWindow(id: "configuration")
                     if let settingsWindow = NSApp.windows.first(where: { $0.title == "Settings" }) {
+                        settingsWindow.delegate = appDelegate
+                        NSApplication.shared.activate()
                         settingsWindow.makeKeyAndOrderFront(nil)
                         settingsWindow.becomeFirstResponder()
-                        settingsWindow.delegate = appDelegate
-                        NSApp.activate(ignoringOtherApps: true)
                     }
                 } label: {
                     Text("Settings...")

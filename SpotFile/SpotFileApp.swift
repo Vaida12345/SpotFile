@@ -18,8 +18,6 @@ struct SpotFileApp: App {
     
     @Environment(\.dismissWindow) private var dismissWindow
     
-    @ApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    
     let modelContainer = try! ModelContainer(
         for: QueryChildRecord.self,
         configurations: ModelConfiguration(url: URL(filePath: NSHomeDirectory() + "/Library/Containers/Vaida.app.SpotFile/Data/Library/Application Support/default.store"))
@@ -44,10 +42,6 @@ struct SpotFileApp: App {
             SettingsView()
                 .environment(modelProvider)
                 .modelContainer(modelContainer)
-                .onAppear {
-                    guard let window = NSApplication.shared.windows.first(where: { $0.title == "Settings" }) else { return }
-                    window.makeKeyAndOrderFront(nil)
-                }
         }
         .commands {
             CommandGroup(replacing: .saveItem) {
@@ -87,6 +81,10 @@ struct SpotFileApp: App {
         func windowWillClose(_ notification: Notification) {
             NSApp.setActivationPolicy(.accessory)
             try? ModelProvider.instance.save()
+        }
+        
+        func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+            false
         }
     }
 #endif

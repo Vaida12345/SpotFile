@@ -11,7 +11,7 @@ import OSLog
 import FinderItem
 
 
-final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStringConvertible {
+final class QueryItemChild: Identifiable, QueryItemProtocol, CustomStringConvertible {
     
     let id = UUID()
     
@@ -80,17 +80,6 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStri
     init(parent: any QueryItemProtocol, filename: String) {
         self.parent = parent
         self.openableFileRelativePath = filename
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(self.openableFileRelativePath)
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.openableFileRelativePath = try container.decode(String.self)
-        self.parent = nil
     }
     
     static var preview: QueryItemChild {

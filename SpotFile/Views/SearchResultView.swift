@@ -48,7 +48,7 @@ struct SearchResultView: View {
                     SearchResultItem(index: index, item: item, match: match)
                 }
                 
-                if modelProvider.matches.count > 25 {
+                if modelProvider.matches.count > 25, modelProvider.matches.count - 25 - modelProvider.shownStartIndex > 0 {
                     Group {
                         Divider()
                         Text("\(modelProvider.matches.count - 25 - modelProvider.shownStartIndex) more items")

@@ -57,12 +57,16 @@ struct Query: Identifiable, CustomStringConvertible {
 
         while index < value.endIndex {
             if (value[index].isUppercase && !cumulative.isEmpty && !cumulative.allSatisfy(\.isUppercase)) || isNumber != value[index].isNumber {
-                components.append(.content(cumulative))
+                if !cumulative.isEmpty {
+                    components.append(.content(cumulative))
+                }
                 cumulative = ""
                 isNumber = value[index].isNumber
                 continue
             } else if value[index].isWhitespace || QueryItem.separators.contains(value[index]) {
-                components.append(.content(cumulative))
+                if !cumulative.isEmpty {
+                    components.append(.content(cumulative))
+                }
                 components.append(.spacer(value[index]))
                 cumulative = ""
                 value.formIndex(after: &index)

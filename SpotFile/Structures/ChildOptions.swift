@@ -39,25 +39,46 @@ extension QueryItem {
         var filters: [Regex<Substring>] = []
         
         mutating func updateFilters() throws {
+            var newFilters: [Regex<Substring>] = []
             var cumulative = ""
             var opened = false
+            var escaping = false
+            
             for c in filterBy {
-                if c == "/" {
-                    if opened {
-                        try filters.append(Regex(cumulative))
-                        cumulative = ""
+                if !opened {
+                    if c == "/" {
+                        opened = true
                     }
-                    opened.toggle()
-                } else if !opened {
                     continue
+                }
+                
+                if escaping {
+                    if c == "/" {
+                        cumulative.append("/")
+                    } else {
+                        cumulative.append("\\")
+                        cumulative.append(c)
+                    }
+                    escaping = false
+                    continue
+                }
+                
+                if c == "\\" {
+                    escaping = true
+                } else if c == "/" {
+                    try newFilters.append(Regex(cumulative))
+                    cumulative = ""
+                    opened = false
                 } else {
                     cumulative.append(c)
                 }
             }
             
-            guard cumulative.isEmpty || !opened else {
+            guard !opened else {
                 throw FilerError.unclosedSlash
             }
+            
+            self.filters = newFilters
         }
         
         mutating func updateRelativePath() throws {

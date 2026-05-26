@@ -38,7 +38,6 @@
 		B4DF9BA62B79CB5900B805A9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */; };
 		B4FAF3FB2B6F458000DBC07E /* MenuBarStyleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */; };
 		B4FAF3FD2B6F495100DBC07E /* QueryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */; };
-		B4FD0D472FC56F410094633A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FD0D462FC56F3C0094633A /* AppDelegate.swift */; };
 		B4FD0D832FC5A19F0094633A /* QueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FD0D822FC5A19A0094633A /* QueryTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -82,7 +81,6 @@
 		B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStyleButton.swift; sourceTree = "<group>"; };
 		B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryItem.swift; sourceTree = "<group>"; };
-		B4FD0D462FC56F3C0094633A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B4FD0D822FC5A19A0094633A /* QueryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -142,7 +140,6 @@
 			isa = PBXGroup;
 			children = (
 				B47C28532B6F257E006BB7FE /* SpotFileApp.swift */,
-				B4FD0D462FC56F3C0094633A /* AppDelegate.swift */,
 				B47C28632B6F2597006BB7FE /* Views */,
 				B4FAF3F22B6F3A0100DBC07E /* Structures */,
 				B47C28622B6F2588006BB7FE /* Assets */,
@@ -363,7 +360,6 @@
 				B43EA8812B81A2F500568440 /* SearchResultView.swift in Sources */,
 				B46EBD1C2B9587660037D797 /* Query.swift in Sources */,
 				B4A6A75D2BF718FF007973EA /* ChildOptions.swift in Sources */,
-				B4FD0D472FC56F410094633A /* AppDelegate.swift in Sources */,
 				B47F31462C42357B009D948A /* QueryChildRecord.swift in Sources */,
 				B4FAF3FD2B6F495100DBC07E /* QueryItem.swift in Sources */,
 			);
