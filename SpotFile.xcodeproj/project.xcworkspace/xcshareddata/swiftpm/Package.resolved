@@ -4,10 +4,10 @@
     {
       "identity" : "concurrentstream",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Vaida12345/ConcurrentStream",
+      "location" : "https://github.com/Vaida12345/ConcurrentStream.git",
       "state" : {
-        "revision" : "5b38deff93bc99abea5abfcd5290772d935cec78",
-        "version" : "1.0.3"
+        "revision" : "2c32dca47c58e774494c67c33b037f3f1d52c9e1",
+        "version" : "1.0.4"
       }
     },
     {

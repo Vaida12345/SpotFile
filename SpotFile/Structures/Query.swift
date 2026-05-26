@@ -25,8 +25,12 @@ struct Query: Identifiable, CustomStringConvertible {
     /// the returned components are NOT lowercased
     @ObservationIgnored
     @transient
-    var components: [Component] = []
-
+    private(set) var components: [Component] = []
+    
+    @ObservationIgnored
+    @transient
+    private(set) var computes: [Compute] = []
+    
     @ObservationIgnored
     @transient
     var lowercasedContent: String = ""
@@ -40,6 +44,7 @@ struct Query: Identifiable, CustomStringConvertible {
 
     private mutating func updateComponents() {
         self.components = Query.component(for: self.content)
+        self.computes = self.components.map(\.compute)
         self.lowercasedContent = self.content.lowercased()
     }
 
@@ -58,7 +63,7 @@ struct Query: Identifiable, CustomStringConvertible {
                 continue
             } else if value[index].isWhitespace || QueryItem.separators.contains(value[index]) {
                 components.append(.content(cumulative))
-                components.append(.spacer("\(value[index])"))
+                components.append(.spacer(value[index]))
                 cumulative = ""
                 value.formIndex(after: &index)
                 continue
@@ -79,32 +84,29 @@ struct Query: Identifiable, CustomStringConvertible {
     // MARK: - Boolean-only matching (no Text allocation)
 
     func matches(lowercasedQueryChars: [Character], isChild: Bool) -> Bool {
-        let queryComponents = self.components
+        var queryComponents = self.computes
 
         if queryComponents.count == 1 && !isChild, case let .content(content) = queryComponents.first {
             var query = lowercasedQueryChars
             var index = content.startIndex
             while index < content.endIndex {
-                if content[index].lowercased().first == query.first {
+                if content[index] == query.first {
                     query.removeFirst()
                 }
                 content.formIndex(after: &index)
             }
             return query.isEmpty
         }
-
-        let queryBuffer = UnsafeMutableBufferPointer<Character>.allocate(capacity: lowercasedQueryChars.count)
-        defer { queryBuffer.deallocate() }
-        _ = queryBuffer.initialize(fromContentsOf: lowercasedQueryChars)
-
-        let componentsBuffer = UnsafeMutableBufferPointer<Component>.allocate(capacity: queryComponents.count)
-        defer { componentsBuffer.deallocate() }
-        _ = componentsBuffer.initialize(fromContentsOf: queryComponents)
-
-        return __recursiveMatchBoolean(_query: queryBuffer, components: componentsBuffer, isFirst: true)
+        
+        var queryBuffer = lowercasedQueryChars
+        return queryBuffer.withUnsafeMutableBufferPointer { queryBuffer in
+            queryComponents.withUnsafeMutableBufferPointer { componentsBuffer in
+                __recursiveMatchBoolean(_query: queryBuffer, components: componentsBuffer, isFirst: true)
+            }
+        }
     }
 
-    private func __recursiveMatchBoolean(_query: UnsafeMutableBufferPointer<Character>, components: UnsafeMutableBufferPointer<Component>, isFirst: Bool = false) -> Bool {
+    private func __recursiveMatchBoolean(_query: UnsafeMutableBufferPointer<Character>, components: UnsafeMutableBufferPointer<Compute>, isFirst: Bool = false) -> Bool {
         guard !_query.isEmpty else {
             return true
         }
@@ -115,11 +117,12 @@ struct Query: Identifiable, CustomStringConvertible {
 
         switch component {
         case .spacer(let spacer):
-            let offset = spacer.first == query.first ? 1 : 0
+            let offset = spacer == query.first ? 1 : 0
             return __recursiveMatchBoolean(_query: query + offset, components: components + 1)
 
         case .content(let content):
-            if QueryItem.separators.contains(query.first!) || query.first!.isWhitespace {
+            let first = query.first!
+            if QueryItem.separators.contains(first) || first.isWhitespace {
                 if components.count != 1,
                    __recursiveMatchBoolean(_query: query, components: components + 1) {
                     return true
@@ -132,10 +135,10 @@ struct Query: Identifiable, CustomStringConvertible {
 
             var queryOffset = 0
             var hasConsumed = false
-            var index = content.startIndex
-            while index < content.endIndex {
+            var index = 0
+            while index < content.count {
                 let c = content[index]
-                if queryOffset < query.count && c.lowercased().first == query[queryOffset] {
+                if queryOffset < query.count && c == query[queryOffset] {
                     queryOffset += 1
                     hasConsumed = true
                 } else {
@@ -147,7 +150,7 @@ struct Query: Identifiable, CustomStringConvertible {
                     }
                     break
                 }
-                content.formIndex(after: &index)
+                index &+= 1
             }
 
             if __recursiveMatchBoolean(_query: query + queryOffset, components: components + 1) {
@@ -215,10 +218,10 @@ struct Query: Identifiable, CustomStringConvertible {
 
         switch component {
         case .spacer(let spacer):
-            let offset = spacer.first == query.first ? 1 : 0
+            let offset = spacer == query.first ? 1 : 0
             let shouldEmphasize = offset == 1
             return __recursiveMatch(_query: query + offset, components: components + 1).map {
-                return Text(spacer).bold(shouldEmphasize) + $0
+                return Text(String(spacer)).bold(shouldEmphasize) + $0
             }
 
         case .content(let content):
@@ -277,25 +280,42 @@ struct Query: Identifiable, CustomStringConvertible {
 
     // MARK: - Substructures
 
-    enum Component: Codable {
-
-        /// Spacer should **always** be `Character`
-        case spacer(String)
-
+    enum Component {
+        case spacer(Character)
         case content(String)
-
 
         var value: String {
             switch self {
-            case .spacer(let string):
-                return string
+            case .spacer(let char):
+                String(char)
             case .content(let string):
-                return string
+                string
             }
         }
-
+        
+        var compute: Compute {
+            switch self {
+            case .spacer(let character):
+                Compute.spacer(character)
+            case .content(let string):
+                Compute.content(Array(string.precomposedStringWithCanonicalMapping.lowercased()))
+            }
+        }
     }
-
+    
+    enum Compute {
+        case spacer(Character)
+        case content([Character])
+        
+        var value: String {
+            switch self {
+            case .spacer(let char):
+                String(char)
+            case .content(let string):
+                String(string)
+            }
+        }
+    }
 
 
     // MARK: - Coding & Initializers
@@ -315,6 +335,7 @@ struct Query: Identifiable, CustomStringConvertible {
         self.content = value
         self.mustIncludeFirstKeyword = mustIncludeFirstKeyword
         self.components = queryComponents
+        self.computes = self.components.map(\.compute)
         self.lowercasedContent = value.lowercased()
     }
 
