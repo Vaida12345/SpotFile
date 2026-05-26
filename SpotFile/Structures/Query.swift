@@ -169,7 +169,7 @@ struct Query: Identifiable, CustomStringConvertible {
     // MARK: - Text-building matching (for display)
 
     func match(lowercasedQueryChars: [Character], isChild: Bool) -> Text? {
-        let queryComponents = self.components
+        var queryComponents = self.components
 
         if queryComponents.count == 1 && !isChild, case let .content(content) = queryComponents.first {
             var cumulative = Text("")
@@ -191,15 +191,12 @@ struct Query: Identifiable, CustomStringConvertible {
             return query.isEmpty ? cumulative : nil
         }
 
-        let queryBuffer = UnsafeMutableBufferPointer<Character>.allocate(capacity: lowercasedQueryChars.count)
-        defer { queryBuffer.deallocate() }
-        _ = queryBuffer.initialize(fromContentsOf: lowercasedQueryChars)
-
-        let componentsBuffer = UnsafeMutableBufferPointer<Component>.allocate(capacity: queryComponents.count)
-        defer { componentsBuffer.deallocate() }
-        _ = componentsBuffer.initialize(fromContentsOf: queryComponents)
-
-        return __recursiveMatch(_query: queryBuffer, components: componentsBuffer, isFirst: true)
+        var queryBuffer = lowercasedQueryChars
+        return queryBuffer.withUnsafeMutableBufferPointer { queryBuffer in
+            queryComponents.withUnsafeMutableBufferPointer { componentsBuffer in
+                __recursiveMatch(_query: queryBuffer, components: componentsBuffer, isFirst: true)
+            }
+        }
     }
 
     /// Convenience wrapper that handles String → [Character] conversion.
