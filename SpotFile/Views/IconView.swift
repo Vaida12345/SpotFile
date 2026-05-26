@@ -44,7 +44,9 @@ struct IconView: View {
             } else {
                 AsyncView(generator: makePreview) { container in
                     switch container {
-                    case .cgImage(let cgImage): AsyncDrawnImage(cgImage: cgImage, frame: .square(scale.side))
+                    case .cgImage(let cgImage):
+                        AsyncDrawnImage(cgImage: cgImage, frame: .square(scale.side))
+                            .disableAnimation()
                     case .system(let name, let color):
                         Image(systemName: name)
                             .imageScale(.large)
@@ -55,6 +57,7 @@ struct IconView: View {
                             .foregroundStyle(isSelected ? .white : color)
                     }
                 }
+                .disableAnimation()
                 .id(finderItem)
             }
         }
