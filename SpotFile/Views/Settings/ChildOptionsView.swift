@@ -103,17 +103,15 @@ struct ChildOptionsView: View {
         do {
             try options.updateRelativePath()
         } catch {
-            options.plainRelativePath = ""
-            AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes were discarded. The error is: \("\(error)")").present()
+            AlertManager("Regex Parse Error", message: "Please check your regex expression. The error is: \("\(error)")").present()
         }
     }
-    
+
     private func updateFiltersRegex() {
         do {
             try options.updateFilters()
         } catch {
-            self.options.filterBy = ""
-            AlertManager("Regex Parse Error", message: "Please check your regex expression. The changes were discarded. The error is: \("\(error)")").present()
+            AlertManager("Regex Parse Error", message: "Please check your regex expression. The error is: \("\(error)")").present()
         }
     }
 }

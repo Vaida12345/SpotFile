@@ -67,8 +67,13 @@ final class QueryItemChild: Codable, Identifiable, QueryItemProtocol, CustomStri
             let logger = Logger(subsystem: "SpotFile", category: "updateRecords")
             logger.error("updateRecords encountered error: \(error)")
         }
-        
-        try! context.save()
+
+        do {
+            try context.save()
+        } catch {
+            let logger = Logger(subsystem: "SpotFile", category: "updateRecords")
+            logger.error("updateRecords save error: \(error)")
+        }
     }
     
     

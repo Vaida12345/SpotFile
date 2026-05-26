@@ -29,7 +29,7 @@ struct SearchResultItem: View {
         index == modelProvider.selectionIndex
     }
     
-    private var relativePath: (folder: String, name: Substring)? {
+    private var relativePath: (name: String, folder: Substring)? {
         if isSelected,
            !item.openableFileRelativePath.isEmpty,
            let name = item.openableFileRelativePath.components(separatedBy: "/").last,

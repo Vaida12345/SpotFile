@@ -103,7 +103,7 @@ final class QueryItem: Codable, Identifiable, QueryItemProtocol, CustomStringCon
         self.openableFileRelativePath = openableFileRelativePath
     }
     
-    static let separators: [Character] = ["_", "/"]
+    static let separators: [Character] = ["_", "/", "-", ":", "+", "."]
     
     static var preview: QueryItem {
         QueryItem(query: "swift testRoom",

@@ -46,7 +46,6 @@ struct SpotFileApp: App {
                 .modelContainer(modelContainer)
                 .onAppear {
                     guard let window = NSApplication.shared.windows.first(where: { $0.title == "Settings" }) else { return }
-                    print("order front: \(window)")
                     window.makeKeyAndOrderFront(nil)
                 }
         }
