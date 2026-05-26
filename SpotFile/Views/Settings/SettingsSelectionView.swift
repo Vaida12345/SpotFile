@@ -224,7 +224,7 @@ struct SettingsSelectionView: View {
     func add(item: FinderItem) async {
         self.selection.apply(undoManager: undoManager) { doc in
             doc.item = item
-            doc.childOptions.isDirectory = item.isDirectory && !((try? item.load(.isPackage)) ?? false)
+            doc.childOptions.isDirectory = item.isDirectory && !((try? item.attributes.isPackage) ?? false)
             
             if doc.query.content == "new" {
                 doc.query.content = item.stem

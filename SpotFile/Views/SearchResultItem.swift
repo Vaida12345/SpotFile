@@ -105,7 +105,7 @@ struct SearchResultItem: View {
         .frame(maxWidth: .infinity)
         .frame(height: (relativePath != nil || !match.isPrimary) ? 35 : 25)
         .background(isSelected ? Color.accentColor : .clear)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .onHover { hovering in
             self.hovering = hovering
         }

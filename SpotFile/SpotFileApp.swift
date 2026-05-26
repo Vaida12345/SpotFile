@@ -8,6 +8,7 @@
 import Essentials
 import SwiftUI
 import SwiftData
+import ViewCollection
 
 
 @main
@@ -16,6 +17,8 @@ struct SpotFileApp: App {
     @State private var modelProvider = ModelProvider.instance
     
     @Environment(\.dismissWindow) private var dismissWindow
+    
+    @ApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     
     let modelContainer = try! ModelContainer(
         for: QueryChildRecord.self,
@@ -41,6 +44,11 @@ struct SpotFileApp: App {
             SettingsView()
                 .environment(modelProvider)
                 .modelContainer(modelContainer)
+                .onAppear {
+                    guard let window = NSApplication.shared.windows.first(where: { $0.title == "Settings" }) else { return }
+                    print("order front: \(window)")
+                    window.makeKeyAndOrderFront(nil)
+                }
         }
         .commands {
             CommandGroup(replacing: .saveItem) {

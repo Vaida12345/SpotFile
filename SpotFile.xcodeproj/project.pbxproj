@@ -38,6 +38,7 @@
 		B4DF9BA62B79CB5900B805A9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */; };
 		B4FAF3FB2B6F458000DBC07E /* MenuBarStyleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */; };
 		B4FAF3FD2B6F495100DBC07E /* QueryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */; };
+		B4FD0D472FC56F410094633A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FD0D462FC56F3C0094633A /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +81,7 @@
 		B4DF9BA52B79CB5900B805A9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStyleButton.swift; sourceTree = "<group>"; };
 		B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryItem.swift; sourceTree = "<group>"; };
+		B4FD0D462FC56F3C0094633A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				B47C28532B6F257E006BB7FE /* SpotFileApp.swift */,
+				B4FD0D462FC56F3C0094633A /* AppDelegate.swift */,
 				B47C28632B6F2597006BB7FE /* Views */,
 				B4FAF3F22B6F3A0100DBC07E /* Structures */,
 				B47C28622B6F2588006BB7FE /* Assets */,
@@ -267,7 +270,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					B43EA8752B80DDC100568440 = {
 						CreatedOnToolsVersion = 15.2;
@@ -356,6 +359,7 @@
 				B43EA8812B81A2F500568440 /* SearchResultView.swift in Sources */,
 				B46EBD1C2B9587660037D797 /* Query.swift in Sources */,
 				B4A6A75D2BF718FF007973EA /* ChildOptions.swift in Sources */,
+				B4FD0D472FC56F410094633A /* AppDelegate.swift in Sources */,
 				B47F31462C42357B009D948A /* QueryChildRecord.swift in Sources */,
 				B4FAF3FD2B6F495100DBC07E /* QueryItem.swift in Sources */,
 			);
@@ -377,7 +381,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 39;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -394,7 +398,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 39;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -466,6 +470,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -526,6 +531,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
@@ -540,7 +546,7 @@
 				CODE_SIGN_ENTITLEMENTS = SpotFile/Assets/SpotFile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 39;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SpotFile/Assets/Preview Content\"";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -554,7 +560,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = Vaida.app.SpotFile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -572,7 +578,7 @@
 				CODE_SIGN_ENTITLEMENTS = SpotFile/Assets/SpotFile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 39;
+				CURRENT_PROJECT_VERSION = 41;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SpotFile/Assets/Preview Content\"";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -586,7 +592,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = Vaida.app.SpotFile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -631,7 +637,7 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		B46CC4252E15591E004DC387 /* XCRemoteSwiftPackageReference "ViewCollection" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Vaida12345/ViewCollection";
+			repositoryURL = "https://github.com/Vaida12345/ViewCollection.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.1.11;
@@ -639,7 +645,7 @@
 		};
 		B46CC4282E155961004DC387 /* XCRemoteSwiftPackageReference "ConcurrentStream" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Vaida12345/ConcurrentStream";
+			repositoryURL = "https://github.com/Vaida12345/ConcurrentStream.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.1;
@@ -647,7 +653,7 @@
 		};
 		B46CC42B2E1559D3004DC387 /* XCRemoteSwiftPackageReference "MacroCollection" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Vaida12345/MacroCollection";
+			repositoryURL = "https://github.com/Vaida12345/MacroCollection.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.1;
@@ -655,18 +661,18 @@
 		};
 		B46CC42E2E155A2E004DC387 /* XCRemoteSwiftPackageReference "FinderItem" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Vaida12345/FinderItem";
+			repositoryURL = "https://github.com/Vaida12345/FinderItem.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.16;
+				minimumVersion = 2.2.1;
 			};
 		};
 		B46CC4312E155AD9004DC387 /* XCRemoteSwiftPackageReference "UndoTracking" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Vaida12345/UndoTracking";
+			repositoryURL = "https://github.com/Vaida12345/UndoTracking.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

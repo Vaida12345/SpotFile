@@ -49,7 +49,7 @@ struct MenuBarStyleButton<Label>: View where Label: View {
         .onHover { hovering in
             self.isOnHover = hovering
         }
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .fontWeight(.regular)
     }
     
