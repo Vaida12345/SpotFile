@@ -50,7 +50,7 @@ struct SearchResultItem: View {
         if let (name, folder) = relativePath {
             VStack(alignment: .leading, spacing: 0) {
                 Text(name)
-                    .fontWeight(.medium)
+                    .fontWeight(.bold)
                 Text(folder)
                     .lineSpacing(0)
                     .font(.callout)
@@ -59,6 +59,7 @@ struct SearchResultItem: View {
             }
         } else {
             Text(item.openableFileRelativePath)
+                .fontWeight(.bold)
         }
     }
     
