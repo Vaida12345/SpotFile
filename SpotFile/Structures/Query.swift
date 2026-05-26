@@ -44,7 +44,7 @@ struct Query: Identifiable, CustomStringConvertible {
 
     private mutating func updateComponents() {
         self.components = Query.component(for: self.content)
-        self.computes = self.components.map(\.compute)
+        self.computes = self.components.compactMap(\.compute)
         self.lowercasedContent = self.content.lowercased()
     }
 
@@ -86,7 +86,7 @@ struct Query: Identifiable, CustomStringConvertible {
     func matches(lowercasedQueryChars: [Character], isChild: Bool) -> Bool {
         var queryComponents = self.computes
 
-        if queryComponents.count == 1 && !isChild, case let .content(content) = queryComponents.first {
+        if queryComponents.count == 1 && !isChild, let content = queryComponents.first {
             var query = lowercasedQueryChars
             var index = content.startIndex
             while index < content.endIndex {
@@ -98,7 +98,7 @@ struct Query: Identifiable, CustomStringConvertible {
             return query.isEmpty
         }
         
-        var queryBuffer = lowercasedQueryChars
+        var queryBuffer = lowercasedQueryChars.filter({ !QueryItem.separators.contains($0) && !$0.isWhitespace })
         return queryBuffer.withUnsafeMutableBufferPointer { queryBuffer in
             queryComponents.withUnsafeMutableBufferPointer { componentsBuffer in
                 __recursiveMatchBoolean(_query: queryBuffer, components: componentsBuffer, isFirst: true)
@@ -110,58 +110,40 @@ struct Query: Identifiable, CustomStringConvertible {
         guard !_query.isEmpty else {
             return true
         }
-        guard let component = components.first else {
+        guard let content = components.first else {
             return false
         }
         let query = _query
-
-        switch component {
-        case .spacer(let spacer):
-            let offset = spacer == query.first ? 1 : 0
-            return __recursiveMatchBoolean(_query: query + offset, components: components + 1)
-
-        case .content(let content):
-            let first = query.first!
-            if QueryItem.separators.contains(first) || first.isWhitespace {
-                if components.count != 1,
-                   __recursiveMatchBoolean(_query: query, components: components + 1) {
-                    return true
-                }
-                if __recursiveMatchBoolean(_query: query + 1, components: components) {
-                    return true
-                }
-                return false
-            }
-
-            var queryOffset = 0
-            var hasConsumed = false
-            var index = 0
-            while index < content.count {
-                let c = content[index]
-                if queryOffset < query.count && c == query[queryOffset] {
-                    queryOffset += 1
-                    hasConsumed = true
-                } else {
-                    if !hasConsumed {
-                        if self.mustIncludeFirstKeyword && isFirst {
-                            return false
-                        }
-                        return __recursiveMatchBoolean(_query: query + queryOffset, components: components + 1)
-                    }
-                    break
-                }
-                index &+= 1
-            }
-
-            if __recursiveMatchBoolean(_query: query + queryOffset, components: components + 1) {
-                return true
-            } else if isFirst && self.mustIncludeFirstKeyword {
-                return false
-            } else if __recursiveMatchBoolean(_query: _query, components: components + 1) {
-                return true
+        
+        
+        var queryOffset = 0
+        var hasConsumed = false
+        var index = 0
+        while index < content.count {
+            let c = content[index]
+            if queryOffset < query.count && c == query[queryOffset] {
+                queryOffset += 1
+                hasConsumed = true
             } else {
-                return false
+                if !hasConsumed {
+                    if self.mustIncludeFirstKeyword && isFirst {
+                        return false
+                    }
+                    return __recursiveMatchBoolean(_query: query + queryOffset, components: components + 1)
+                }
+                break
             }
+            index &+= 1
+        }
+        
+        if __recursiveMatchBoolean(_query: query + queryOffset, components: components + 1) { // take consumed
+            return true
+        } else if isFirst && self.mustIncludeFirstKeyword {
+            return false
+        } else if __recursiveMatchBoolean(_query: _query, components: components + 1) { // take unconsumed, test next path.
+            return true
+        } else {
+            return false
         }
     }
 
@@ -191,7 +173,7 @@ struct Query: Identifiable, CustomStringConvertible {
             return query.isEmpty ? cumulative : nil
         }
 
-        var queryBuffer = lowercasedQueryChars
+        var queryBuffer = lowercasedQueryChars.filter({ !QueryItem.separators.contains($0) && !$0.isWhitespace })
         return queryBuffer.withUnsafeMutableBufferPointer { queryBuffer in
             queryComponents.withUnsafeMutableBufferPointer { componentsBuffer in
                 __recursiveMatch(_query: queryBuffer, components: componentsBuffer, isFirst: true)
@@ -215,26 +197,11 @@ struct Query: Identifiable, CustomStringConvertible {
 
         switch component {
         case .spacer(let spacer):
-            let offset = spacer == query.first ? 1 : 0
-            let shouldEmphasize = offset == 1
-            return __recursiveMatch(_query: query + offset, components: components + 1).map {
-                return Text(String(spacer)).bold(shouldEmphasize) + $0
+            return __recursiveMatch(_query: query, components: components + 1).map {
+                return Text(String(spacer)) + $0
             }
 
         case .content(let content):
-            if QueryItem.separators.contains(query.first!) || query.first!.isWhitespace {
-                if components.count != 1,
-                   let next = __recursiveMatch(_query: query, components: components + 1) {
-                    return Text(content) + next
-                }
-
-                if let next = __recursiveMatch(_query: query + 1, components: components) {
-                    return next
-                }
-
-                return nil
-            }
-
             var queryOffset = 0
             var cumulative = ""
             var remaining = Substring()
@@ -290,29 +257,17 @@ struct Query: Identifiable, CustomStringConvertible {
             }
         }
         
-        var compute: Compute {
+        var compute: [Character]? {
             switch self {
-            case .spacer(let character):
-                Compute.spacer(character)
+            case .spacer:
+                nil
             case .content(let string):
-                Compute.content(Array(string.precomposedStringWithCanonicalMapping.lowercased()))
+                Array(string.precomposedStringWithCanonicalMapping.lowercased())
             }
         }
     }
     
-    enum Compute {
-        case spacer(Character)
-        case content([Character])
-        
-        var value: String {
-            switch self {
-            case .spacer(let char):
-                String(char)
-            case .content(let string):
-                String(string)
-            }
-        }
-    }
+    typealias Compute = [Character]
 
 
     // MARK: - Coding & Initializers
@@ -332,7 +287,7 @@ struct Query: Identifiable, CustomStringConvertible {
         self.content = value
         self.mustIncludeFirstKeyword = mustIncludeFirstKeyword
         self.components = queryComponents
-        self.computes = self.components.map(\.compute)
+        self.computes = self.components.compactMap(\.compute)
         self.lowercasedContent = value.lowercased()
     }
 

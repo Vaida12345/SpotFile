@@ -39,6 +39,7 @@
 		B4FAF3FB2B6F458000DBC07E /* MenuBarStyleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */; };
 		B4FAF3FD2B6F495100DBC07E /* QueryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */; };
 		B4FD0D472FC56F410094633A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FD0D462FC56F3C0094633A /* AppDelegate.swift */; };
+		B4FD0D832FC5A19F0094633A /* QueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FD0D822FC5A19A0094633A /* QueryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,7 @@
 		B4FAF3FA2B6F458000DBC07E /* MenuBarStyleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStyleButton.swift; sourceTree = "<group>"; };
 		B4FAF3FC2B6F495100DBC07E /* QueryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryItem.swift; sourceTree = "<group>"; };
 		B4FD0D462FC56F3C0094633A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B4FD0D822FC5A19A0094633A /* QueryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				B43EA8782B80DDC100568440 /* SpotFileTests.swift */,
+				B4FD0D822FC5A19A0094633A /* QueryTests.swift */,
 				B43EA87F2B80DE1D00568440 /* SpotFileTests.xctestplan */,
 			);
 			path = SpotFileTests;
@@ -333,6 +336,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4FD0D832FC5A19F0094633A /* QueryTests.swift in Sources */,
 				B43EA8792B80DDC100568440 /* SpotFileTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
