@@ -67,7 +67,6 @@ final class FileSearcher {
     // not private for testing.
     nonisolated static func performSearches(request: SearchRequest, previous: SearchState?, context: ModelContext, in items: [QueryItem]) async throws -> SearchState {
         guard !request.text.isEmpty else {
-            print("return reset")
             return SearchState(request: request, match: nil, options: .reset)
         }
         
@@ -132,10 +131,6 @@ final class FileSearcher {
                 }, by: >)
             }
             
-#if DEBUG
-            print("Fetch changes in", __fetch_date.distanceToNow())
-#endif
-            
             // MARK: - check if deep search
             
             var deepSearchTarget: QueryItem? = nil
@@ -153,7 +148,6 @@ final class FileSearcher {
                 case .direct:
                     return false
                 case .deep(let target, _, _):
-                    print(previous.request)
                     if request.parent?.id == target.id {
                         return request.text.hasPrefix(previous.request.text) || previous.request.parent == nil // is first
                     } else {
@@ -164,14 +158,11 @@ final class FileSearcher {
                 }
             }
             
-            print("can use previous result: \(canUseLastResultDeep)")
-            
             if let parent = request.parent {
                 deepSearchTarget = parent
             } else if let previous, directMatches.isEmpty, canUseLastResultDeep { // only true AFTER exhausting the search AND previous indicates can deep search.
                 switch previous.match {
                 case let .deep(target, targetQuery, matches: _):
-                    print("use previous result")
                     deepSearchTarget = target
                     deepSearchText = String(request.text.trimmingPrefix(targetQuery ?? ""))
                 case .direct(let matches):
@@ -190,9 +181,7 @@ final class FileSearcher {
                     let char = lowercasedQueryChars[index]
                     if char.isWhitespace || QueryItem.separators.contains(char) {
                         let candidate = Array(lowercasedQueryChars[..<index])
-                        print("search for \(candidate) as potential deep search candidate")
                         if let onlyMatch = candidates.onlyMatch(where: { $0.matches(lowercasedQueryChars: candidate) }) {
-                            print("match found")
                             deepSearchTarget = onlyMatch
                             _targetQuery = String(candidate)
                             deepSearchText = String(lowercasedQueryChars[index...])
@@ -273,7 +262,6 @@ final class FileSearcher {
                 }, by: >)
             }
             
-            print("return \(deepMatches.map(\.1))")
             return SearchState(
                 request: request,
                 match: .deep(target: deepSearchTarget, targetQuery: _targetQuery, matches: deepMatches),

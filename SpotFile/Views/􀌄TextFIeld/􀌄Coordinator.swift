@@ -80,8 +80,6 @@ extension SuggestionTextField {
         func controlTextDidChange(_ notification: Notification) {
             let text = self.searchField.stringValue
             
-            print("text did change to `\(text)`")
-            
             modelProvider.searchText = text
             fileSearcher.sendSearchRequest(text, parent: modelProvider.deepSearchTarget)
         }
