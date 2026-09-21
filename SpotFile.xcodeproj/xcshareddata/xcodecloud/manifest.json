@@ -1,0 +1,17 @@
+{
+  "id" : "11c12f7c-fceb-4976-9890-cc81dc513dda",
+  "targets" : [
+    {
+      "id" : "981a925c-80ef-4227-94a6-44a0789e9fdd",
+      "name" : "DetailedDescription"
+    },
+    {
+      "id" : "4088b27f-11b9-489c-b0d7-338ea9a2181b",
+      "name" : "MacroCollection"
+    },
+    {
+      "id" : "7f3be22b-6d1d-440e-b062-da49679b954e",
+      "name" : "SpotFile"
+    }
+  ]
+}

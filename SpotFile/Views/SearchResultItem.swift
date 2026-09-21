@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 
 struct SearchResultItem: View {
@@ -33,7 +34,7 @@ struct SearchResultItem: View {
         if isSelected,
            !item.openableFileRelativePath.isEmpty,
            let name = item.openableFileRelativePath.components(separatedBy: "/").last,
-           let _item = modelProvider.previous.matches.first,
+           let _item = modelProvider.deepSearchTarget,
            let relative = item.item.relativePath(to: _item.item) {
             let folder = relative.dropLast(name.count + 1)
             if !folder.isEmpty {

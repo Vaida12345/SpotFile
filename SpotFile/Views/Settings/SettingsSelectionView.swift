@@ -10,6 +10,7 @@ import SwiftUI
 import ViewCollection
 import FinderItem
 import UndoTracking
+import SwiftData
 
 
 struct SettingsSelectionView: View {

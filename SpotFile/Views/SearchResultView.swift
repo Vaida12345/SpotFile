@@ -13,24 +13,27 @@ struct SearchResultView: View {
     
     var body: some View {
         VStack(spacing: 4) {
-            if modelProvider.previous.parentQuery != nil {
-                if let item = modelProvider.previous.matches.first {
-                    HStack {
-                        IconView(item: item, scale: .small, isSelected: false)
-                        
-                        Text(item.query.content)
-                            .bold()
-                        Spacer()
-                    }
-                    .padding(.leading, 7.5)
+            if let target = modelProvider.deepSearchTarget {
+                HStack {
+                    IconView(item: target, scale: .small, isSelected: false)
+                    
+                    Text(target.query.content)
+                        .bold()
+                    
+                    Spacer()
                 }
+                .padding(.leading, 7.5)
                 
                 Divider()
             }
             
-            if modelProvider.matches.isEmpty {
+            if modelProvider.matches.isEmpty { // only when is empty, otherwise will flash
                 Group {
-                    Text("No results found")
+                    if modelProvider.isSearching {
+                        Text("Searching...")
+                    } else {
+                        Text("No results found")
+                    }
                 }
                 .bold()
                 .foregroundStyle(.secondary)

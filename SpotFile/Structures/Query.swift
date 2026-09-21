@@ -166,9 +166,9 @@ struct Query: Identifiable, CustomStringConvertible {
                 let c = content[index]
                 if c.lowercased().first == query.first {
                     query.removeFirst()
-                    cumulative = cumulative + Text("\(c)").bold()
+                    cumulative = cumulative + Text(verbatim: "\(c)").bold()
                 } else {
-                    cumulative = cumulative + Text("\(c)")
+                    cumulative = cumulative + Text(verbatim: "\(c)")
                 }
 
                 content.formIndex(after: &index)
@@ -192,7 +192,7 @@ struct Query: Identifiable, CustomStringConvertible {
 
     private func __recursiveMatch(_query: UnsafeMutableBufferPointer<Character>, components: UnsafeMutableBufferPointer<Component>, isFirst: Bool = false) -> Text? {
         guard !_query.isEmpty else {
-            return Text(components.map(\.value).joined(separator: ""))
+            return Text(verbatim: components.map(\.value).joined(separator: ""))
         }
         guard let component = components.first else {
             return nil
@@ -232,12 +232,12 @@ struct Query: Identifiable, CustomStringConvertible {
 
 
             if let match = __recursiveMatch(_query: query + queryOffset, components: components + 1) {
-                let attributed = Text(cumulative).bold() + Text(remaining)
+                let attributed = Text(verbatim: cumulative).bold() + Text(verbatim: String(remaining))
                 return attributed + match
             } else if isFirst && self.mustIncludeFirstKeyword {
                 return nil
             } else if let match = __recursiveMatch(_query: _query, components: components + 1) {
-                let attributed = Text(content)
+                let attributed = Text(verbatim: content)
                 return attributed + match
             } else {
                 return nil

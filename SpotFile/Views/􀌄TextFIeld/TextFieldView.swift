@@ -32,6 +32,11 @@ struct SuggestionTextField: NSViewRepresentable {
         searchField.isSelectable = true
         searchField.isEditable = true
         
+        DispatchQueue.main.async {
+            searchField.window?.makeKeyAndOrderFront(nil)
+            searchField.becomeFirstResponder()
+        }
+        
         let searchFieldCell = searchField.cell!
         searchFieldCell.lineBreakMode = .byWordWrapping
         
@@ -48,16 +53,8 @@ struct SuggestionTextField: NSViewRepresentable {
             }
         }
         
-        if let prefix = modelProvider.previous.parentQuery,
-            modelProvider.searchText.hasPrefix(prefix) {
-            let pendingUpdate = String(modelProvider.searchText.dropFirst(prefix.count))
-            if searchField.stringValue != pendingUpdate {
-                searchField.stringValue = pendingUpdate
-            }
-        } else {
-            if searchField.stringValue != modelProvider.searchText {
-                searchField.stringValue = modelProvider.searchText
-            }
+        if searchField.stringValue != modelProvider.searchText {
+            searchField.stringValue = modelProvider.searchText
         }
     }
     
