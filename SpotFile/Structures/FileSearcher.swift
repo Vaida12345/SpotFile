@@ -194,7 +194,9 @@ final class FileSearcher {
             }
             
             guard let deepSearchTarget else {
+#if DEBUG
                 logger.trace("Exit as no deep search target")
+#endif
                 return SearchState(request: request, match: .direct(directMatches), options: [])
             }
             
@@ -206,7 +208,9 @@ final class FileSearcher {
             }
             
             guard canPerformDeepSearchOnTarget else {
+#if DEBUG
                 logger.trace("Exit as cannot perform deep search on \(deepSearchTarget)")
+#endif
                 return SearchState(request: request, match: .direct(directMatches), options: [])
             }
             
