@@ -53,7 +53,9 @@ struct SuggestionTextField: NSViewRepresentable {
             }
         }
         
-        if searchField.stringValue != modelProvider.searchText {
+        // Never replace the text while it is being edited: the field editor keeps its insertion point, so keystrokes in flight would be inserted at the wrong place. The coordinator edits the field directly instead. Clearing the field (reset) is always safe.
+        if searchField.currentEditor() == nil || modelProvider.searchText.isEmpty,
+           searchField.stringValue != modelProvider.searchText {
             searchField.stringValue = modelProvider.searchText
         }
     }

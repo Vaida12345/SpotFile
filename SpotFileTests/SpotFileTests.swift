@@ -102,9 +102,50 @@ struct FileSearcherTests {
         #expect(matches.contains { $0.0.item.name == "Reports" })
     }
 
+    /// When typing fast, the previous complete search may already contain part of the deep search text. The target query must still end at the whitespace, not at the end of the previous request.
+    @Test
+    func deepSearchSplitsAtWhitespaceWhenPreviousRequestOvershoots() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SpotFileTests-\(UUID().uuidString)", isDirectory: true)
+        let childDirectory = directory.appendingPathComponent("Reports", isDirectory: true)
+        try FileManager.default.createDirectory(at: childDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let item = QueryItem(query: "Workspace", item: FinderItem(at: directory.path), openableFileRelativePath: "")
+        item.childOptions = .init(isDirectory: true, isEnabled: true, includeFolder: true, includeFile: false, enumeration: true)
+
+        let match = try #require(item.match(lowercasedQueryChars: Array("workspace")))
+        let previous = FileSearcher.SearchState(
+            request: FileSearcher.SearchRequest(text: "workspace re", parent: nil),
+            match: .direct([(item, match)]),
+            options: []
+        )
+
+        let result = try await search(text: "workspace rep", previous: previous, items: [item])
+
+        guard case let .deep(target, targetQuery, matches)? = result.match else {
+            Issue.record("Expected deep search results.")
+            return
+        }
+
+        #expect(target.id == item.id)
+        #expect(targetQuery == "workspace")
+        #expect(matches.contains { $0.0.item.name == "Reports" })
+    }
+
+    @Test
+    func deepSearchBoundaryPrefersLastWhitespaceWithinPreviousRequest() {
+        let item = QueryItem(query: "Workspace", item: .homeDirectory, openableFileRelativePath: "")
+
+        #expect(FileSearcher.deepSearchBoundary(in: Array("workspace rep"), target: item, preferredEnd: 12) == 9)
+        #expect(FileSearcher.deepSearchBoundary(in: Array("workspace rep"), target: item, preferredEnd: 4) == 9)
+        #expect(FileSearcher.deepSearchBoundary(in: Array("unrelated rep"), target: item, preferredEnd: 12) == nil)
+    }
+
     private func search(
         text: String,
         parent: QueryItem? = nil,
+        previous: FileSearcher.SearchState? = nil,
         items: [QueryItem]
     ) async throws -> FileSearcher.SearchState {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -113,10 +154,11 @@ struct FileSearcherTests {
         nonisolated(unsafe) let request = FileSearcher.SearchRequest(text: text, parent: parent)
         nonisolated(unsafe) let context = container.mainContext
         nonisolated(unsafe) let searchItems = items
+        nonisolated(unsafe) let previous = previous
 
         return try await FileSearcher.performSearches(
             request: request,
-            previous: nil,
+            previous: previous,
             context: context,
             in: searchItems
         )

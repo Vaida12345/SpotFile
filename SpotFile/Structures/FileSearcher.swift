@@ -164,13 +164,18 @@ final class FileSearcher {
                 switch previous.match {
                 case let .deep(target, targetQuery, matches: _):
                     deepSearchTarget = target
+                    // Carry the target query forward, so the UI can still strip it if it missed the earlier result.
+                    _targetQuery = targetQuery
                     deepSearchText = String(request.text.trimmingPrefix(targetQuery ?? ""))
                 case .direct(let matches):
-                    if matches.count == 1, let firstMatch = matches.first {
-                        deepSearchTarget = firstMatch.0
-                        
-                        _targetQuery = previous.request.text
-                        deepSearchText = String(request.text.trimmingPrefix(_targetQuery ?? ""))
+                    if matches.count == 1, let target = matches.first?.0 {
+                        // The previous request is not necessarily where the target query ends: when typing fast, intermediate requests are skipped, and the previous request may already contain part of the deep search text (e.g. `proj pk` still fuzzy-matching the target). Hence find the boundary in the current text instead.
+                        let previousCount = previous.request.text.precomposedStringWithCanonicalMapping.lowercased().count
+                        if let index = deepSearchBoundary(in: lowercasedQueryChars, target: target, preferredEnd: previousCount) {
+                            deepSearchTarget = target
+                            _targetQuery = String(lowercasedQueryChars[..<index])
+                            deepSearchText = String(lowercasedQueryChars[index...])
+                        }
                     }
                 default:
                     break
@@ -280,6 +285,27 @@ final class FileSearcher {
     }
     
     
+    /// Finds where the query for `target` ends in `lowercasedQueryChars`.
+    ///
+    /// A boundary is a whitespace at which the text before it still matches `target`, so that the remaining deep search text starts with a whitespace. The last such boundary at or before `preferredEnd` is used, which keeps target queries that contain whitespaces intact. If there is none, the first boundary after `preferredEnd` is used.
+    ///
+    /// - Returns: The index of the whitespace that starts the deep search text.
+    nonisolated static func deepSearchBoundary(in lowercasedQueryChars: [Character], target: QueryItem, preferredEnd: Int) -> Int? {
+        var preferred: Int? = nil
+        var index = lowercasedQueryChars.startIndex
+        while index < lowercasedQueryChars.endIndex {
+            if lowercasedQueryChars[index].isWhitespace, index > 0, target.matches(lowercasedQueryChars: Array(lowercasedQueryChars[..<index])) {
+                if index <= preferredEnd {
+                    preferred = index
+                } else {
+                    return preferred ?? index
+                }
+            }
+            index &+= 1
+        }
+        return preferred
+    }
+
     /// Explicitly make async to wait for fileI/O.
     private nonisolated static func checkFileType(item: FinderItem) async -> Bool {
         !((try? item.url.resourceValues(forKeys: [.isPackageKey]).isPackage) ?? false)
@@ -355,16 +381,20 @@ final class FileSearcher {
                 self.searchPublisher(request: $0, context: context)
             }
             .switchToLatest()
-            .handleEvents(receiveOutput: { output in
-                if output.options.contains(.reset), output.match?.is(.goto) == true {
-                    self.previousCompleteSearch = nil
-                } else {
-                    self.previousCompleteSearch = output
-                }
-            })
             .eraseToAnyPublisher()
     }
-    
+
+    /// Records `state` as the base for the next search.
+    ///
+    /// Only call this with results the UI has accepted. A result that was discarded as stale must not be used as the base, otherwise the searcher and the UI disagree on the deep search target.
+    func commit(_ state: SearchState) {
+        if state.options.contains(.reset), state.match?.is(.goto) == true {
+            self.previousCompleteSearch = nil
+        } else {
+            self.previousCompleteSearch = state
+        }
+    }
+
     func sendSearchRequest(_ text: String, parent: QueryItem? = nil) {
         self.searchRequests.send(SearchRequest(text: text, parent: parent))
     }
